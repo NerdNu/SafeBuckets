@@ -19,7 +19,7 @@ public class SafeBucketsBlockListener extends BlockListener {
             return;
 
         Material mat = event.getBlock().getType();
-            if (mat == Material.STATIONARY_LAVA || mat == Material.STATIONARY_WATER) {
+        if (mat == Material.STATIONARY_LAVA || mat == Material.STATIONARY_WATER) {
             if (plugin.bucketBlocks.contains(event.getBlock().hashCode())) {
                 //plugin.log.info("cancelling");
                 event.setCancelled(true);
