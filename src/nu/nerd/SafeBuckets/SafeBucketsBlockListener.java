@@ -41,7 +41,7 @@ public class SafeBucketsBlockListener extends BlockListener {
     public void onBlockPlace(BlockPlaceEvent event) {
         if (event.isCancelled())
             return;
-
+        
         plugin.bucketBlocks.remove(event.getBlockPlaced().hashCode());
         plugin.saveSet();
     }
