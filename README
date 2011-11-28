@@ -1,8 +1,0 @@
-SafeBuckets
-=======
-
-Overrides the internal CraftBukkit BlockStationary to never make stationary
-water/lava flow if a certain damage value is set and makes water/lava placed
-from buckets use this damage value. This makes player-placed water/lava
-never flow while still allowing normal water/lava to follow vanilla Minecraft
-physics.
