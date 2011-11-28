@@ -1,5 +1,4 @@
 name: SafeBuckets
 main: nu.nerd.SafeBuckets.SafeBuckets
 version: 0.1
-author: Travis Watkins
-
+authors: [Travis Watkins, Ed Kellett]
