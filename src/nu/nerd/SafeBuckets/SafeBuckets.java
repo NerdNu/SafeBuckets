@@ -21,7 +21,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class SafeBuckets extends JavaPlugin
 {
     private final SafeBucketsPlayerListener pl = new SafeBucketsPlayerListener(this);
-    private final SafeBucketsBlockListener bl = new SafeBucketsBlockListener(this);
+    private final SafeBucketsBlockListener  bl = new SafeBucketsBlockListener(this);
+    private final SafeBucketsWorldListener  wl = new SafeBucketsWorldListener(this);
+
     public HashMap<String, TreeSet<Long>> bucketBlocks;
     public static final Logger log = Logger.getLogger("Minecraft");
 
@@ -78,6 +80,8 @@ public class SafeBuckets extends JavaPlugin
         pm.registerEvent(Type.BLOCK_PLACE,   bl, Priority.Monitor, this);
         pm.registerEvent(Type.BLOCK_PHYSICS, bl, Priority.Highest, this);
         pm.registerEvent(Type.BLOCK_FROMTO,  bl, Priority.Highest, this);
+
+        pm.registerEvent(Type.WORLD_LOAD, wl, Priority.Highest, this);
 
         loadSet();
 

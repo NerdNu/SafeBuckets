@@ -9,7 +9,7 @@ import org.bukkit.event.block.BlockFromToEvent;
 
 public class SafeBucketsBlockListener extends BlockListener
 {
-    private SafeBuckets plugin;
+    private final SafeBuckets plugin;
 
     SafeBucketsBlockListener(SafeBuckets instance)
     {
