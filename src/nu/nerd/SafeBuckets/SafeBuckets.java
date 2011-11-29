@@ -67,6 +67,7 @@ public class SafeBuckets extends JavaPlugin
         pm.registerEvent(Type.PLAYER_BUCKET_EMPTY, pl, Priority.Monitor, this);
         pm.registerEvent(Type.BLOCK_PHYSICS, bl, Priority.Normal, this);
         pm.registerEvent(Type.BLOCK_PLACE, bl, Priority.Normal, this);
+        pm.registerEvent(Type.BLOCK_FROMTO, bl, Priority.Normal, this);
 
         loadSet();
 
