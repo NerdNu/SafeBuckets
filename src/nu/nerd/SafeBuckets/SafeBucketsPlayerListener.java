@@ -1,10 +1,6 @@
 package nu.nerd.SafeBuckets;
 
-import java.util.ArrayList;
-import org.bukkit.GameMode;
-import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerListener;
 
@@ -19,7 +15,8 @@ public class SafeBucketsPlayerListener extends PlayerListener
     }
 
     @Override
-    public void onPlayerBucketEmpty(PlayerBucketEmptyEvent event) {
+    public void onPlayerBucketEmpty(PlayerBucketEmptyEvent event)
+    {
         if (event.isCancelled())
             return;
 

@@ -22,7 +22,8 @@ public class SafeBuckets extends JavaPlugin
     public TreeSet<Integer> bucketBlocks;
     public static final Logger log = Logger.getLogger("Minecraft");
 
-    public void saveSet() {
+    public void saveSet()
+    {
         File saveFile = new File(this.getDataFolder() + File.separator + "bucketBlocks.dat");
         saveFile.getParentFile().mkdirs();
         try {
@@ -35,7 +36,8 @@ public class SafeBuckets extends JavaPlugin
         }
     }
 
-    public void loadSet() {
+    public void loadSet()
+    {
         File saveFile = new File(this.getDataFolder() + File.separator + "bucketBlocks.dat");
         if (saveFile.exists()) {
             try {
@@ -65,9 +67,10 @@ public class SafeBuckets extends JavaPlugin
     {
         PluginManager pm = this.getServer().getPluginManager();
         pm.registerEvent(Type.PLAYER_BUCKET_EMPTY, pl, Priority.Monitor, this);
-        pm.registerEvent(Type.BLOCK_PHYSICS, bl, Priority.Normal, this);
-        pm.registerEvent(Type.BLOCK_PLACE, bl, Priority.Normal, this);
-        pm.registerEvent(Type.BLOCK_FROMTO, bl, Priority.Normal, this);
+
+        pm.registerEvent(Type.BLOCK_PLACE,   bl, Priority.Monitor, this);
+        pm.registerEvent(Type.BLOCK_PHYSICS, bl, Priority.Highest, this);
+        pm.registerEvent(Type.BLOCK_FROMTO,  bl, Priority.Highest, this);
 
         loadSet();
 
