@@ -5,10 +5,13 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.HashMap;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.event.Event.Type;
 import org.bukkit.plugin.PluginManager;
@@ -19,7 +22,7 @@ public class SafeBuckets extends JavaPlugin
 {
     private final SafeBucketsPlayerListener pl = new SafeBucketsPlayerListener(this);
     private final SafeBucketsBlockListener bl = new SafeBucketsBlockListener(this);
-    public TreeSet<Integer> bucketBlocks;
+    public HashMap<String, TreeSet<Long>> bucketBlocks;
     public static final Logger log = Logger.getLogger("Minecraft");
 
     public void saveSet()
@@ -43,15 +46,19 @@ public class SafeBuckets extends JavaPlugin
             try {
                 FileInputStream fis = new FileInputStream(saveFile);
                 ObjectInputStream in = new ObjectInputStream(fis);
-                bucketBlocks = (TreeSet<Integer>)in.readObject();
+                bucketBlocks = (HashMap<String, TreeSet<Long>>)in.readObject();
             }
             catch (Exception e) {
                 e.printStackTrace();
-                bucketBlocks = new TreeSet<Integer>();
+                bucketBlocks = new HashMap<String, TreeSet<Long>>();
+                for (World world : Bukkit.getWorlds())
+                    bucketBlocks.put(world.getName(), new TreeSet<Long>());
             }
         }
         else {
-            bucketBlocks = new TreeSet<Integer>();
+            bucketBlocks = new HashMap<String, TreeSet<Long>>();
+            for (World world : Bukkit.getWorlds())
+                bucketBlocks.put(world.getName(), new TreeSet<Long>());
         }
     }
 

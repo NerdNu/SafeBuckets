@@ -21,9 +21,10 @@ public class SafeBucketsPlayerListener extends PlayerListener
             return;
 
         Block block = event.getBlockClicked().getRelative(event.getBlockFace());
-        
-        plugin.log.info("Added hashcode: " + block.hashCode());
-        plugin.bucketBlocks.add(block.hashCode());
+        Long hash = Util.GetHashCode(block.getX(), block.getY(), block.getZ());
+
+        plugin.log.info("Added hashcode: " + hash);
+        plugin.bucketBlocks.get(block.getWorld().getName()).add(hash);
         plugin.saveSet();
     }
 }

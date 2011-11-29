@@ -24,7 +24,11 @@ public class SafeBucketsBlockListener extends BlockListener
 
         Material mat = event.getBlock().getType();
         if (mat == Material.STATIONARY_LAVA || mat == Material.STATIONARY_WATER) {
-            if (plugin.bucketBlocks.contains(event.getBlock().hashCode())) {
+            Long hash = Util.GetHashCode(event.getBlock().getX(),
+                                         event.getBlock().getY(),
+                                         event.getBlock().getZ());
+            String name = event.getBlock().getWorld().getName();
+            if (plugin.bucketBlocks.get(name).contains(hash)) {
                 event.setCancelled(true);
             }
         }
@@ -37,18 +41,25 @@ public class SafeBucketsBlockListener extends BlockListener
             return;
 
         Block block = event.getBlock();
+        Long hash = Util.GetHashCode(block.getX(), block.getY(), block.getZ());
+        String name = block.getWorld().getName();
 
-        if (plugin.bucketBlocks.contains(block.hashCode())) {
-            //somehow our blocks got changed to flowing, change them back
+        if (plugin.bucketBlocks.get(name).contains(hash)) {
+            //somehow our block got changed to flowing, change it back
             if (block.getType() == Material.WATER)
                 block.setTypeId(9, false);
             if (block.getType() == Material.LAVA)
                 block.setTypeId(11, false);
 
             event.setCancelled(true);
+            return;
         }
 
-        if (plugin.bucketBlocks.contains(event.getToBlock().hashCode())) {
+        hash = Util.GetHashCode(event.getToBlock().getX(),
+                                event.getToBlock().getY(),
+                                event.getToBlock().getZ());
+
+        if (plugin.bucketBlocks.get(name).contains(hash)) {
             event.setCancelled(true);
         }
     }
@@ -60,7 +71,12 @@ public class SafeBucketsBlockListener extends BlockListener
             return;
 
         //if someone placed a block that destroyed our liquid, stop tracking it
-        plugin.bucketBlocks.remove(event.getBlockPlaced().hashCode());
+        Long hash = Util.GetHashCode(event.getBlockPlaced().getX(),
+                                     event.getBlockPlaced().getY(),
+                                     event.getBlockPlaced().getZ());
+        String name = event.getBlockPlaced().getWorld().getName();
+ 
+        plugin.bucketBlocks.get(name).remove(hash);
         plugin.saveSet();
     }
 }
