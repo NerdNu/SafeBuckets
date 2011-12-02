@@ -64,6 +64,19 @@ public class SafeBuckets extends JavaPlugin
         }
     }
 
+    private void convert()
+    {
+        for (String world : bucketBlocks.keySet()) {
+            TreeSet<Long> tree = bucketBlocks.get(world);
+            for (long hash : tree) {
+                int[] coords = Util.ConvertOldToNew(hash);
+                tree.remove(hash);
+                tree.add(Util.GetHashCode(coords[0], coords[1], coords[2]));
+            }
+        }
+        saveSet();
+    }
+
     @Override
     public void onDisable()
     {
@@ -84,6 +97,17 @@ public class SafeBuckets extends JavaPlugin
         pm.registerEvent(Type.WORLD_LOAD, wl, Priority.Highest, this);
 
         loadSet();
+
+        //hash method changed, convert old system to new
+        File converted = new File(this.getDataFolder() + File.separator + ".format2");
+        if (!converted.exists())
+            convert();
+        try {
+            converted.createNewFile();
+        }
+        catch (Exception e) {
+            log.log(Level.SEVERE, "database converted but cannot make file to mark it");
+        }
 
         log.log(Level.INFO, "[" + getDescription().getName() + "] " + getDescription().getVersion() + " enabled.");
     }
