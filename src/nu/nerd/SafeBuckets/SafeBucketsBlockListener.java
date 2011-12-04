@@ -70,7 +70,10 @@ public class SafeBucketsBlockListener extends BlockListener
         if (event.isCancelled())
             return;
 
-        //if someone placed a block that destroyed our liquid, stop tracking it
+        //only stop tracking if source blocks were placed - this makes rollbacks work
+        if (!event.getBlockPlaced().isLiquid())
+            return;
+
         Long hash = Util.GetHashCode(event.getBlockPlaced().getX(),
                                      event.getBlockPlaced().getY(),
                                      event.getBlockPlaced().getZ());
