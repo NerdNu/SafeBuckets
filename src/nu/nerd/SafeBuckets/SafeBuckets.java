@@ -12,6 +12,8 @@ import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.event.Event.Type;
 import org.bukkit.plugin.PluginManager;
@@ -69,6 +71,7 @@ public class SafeBuckets extends JavaPlugin
     public void onDisable()
     {
         saveSet();
+
         log.log(Level.INFO, "[" + getDescription().getName() + "] " + getDescription().getVersion() + " disabled.");
     }
 
@@ -88,6 +91,12 @@ public class SafeBuckets extends JavaPlugin
         pm.registerEvent(Type.WORLD_LOAD, wl, Priority.Highest, this);
 
         loadSet();
+
+        File config = new File(getDataFolder() + File.separator + "config.yml");
+        if (!config.exists()) {
+            getConfig().options().copyDefaults(true);
+            saveConfig();
+        }
 
         log.log(Level.INFO, "[" + getDescription().getName() + "] " + getDescription().getVersion() + " enabled.");
     }

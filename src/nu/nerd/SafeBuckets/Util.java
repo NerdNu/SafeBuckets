@@ -6,7 +6,6 @@ import net.minecraft.server.AxisAlignedBB;
 import net.minecraft.server.EntityPlayer;
 
 import org.bukkit.Material;
-import org.bukkit.block.Block;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Entity;
 
