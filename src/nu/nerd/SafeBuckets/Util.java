@@ -8,17 +8,6 @@ public class Util {
         return (long)(n + 32000000) & 0x0fffffff;
     }
 
-    public static int[] ConvertOldToNew(long hash)
-    {
-        int[] coords = new int[3];
-
-        coords[0] = (int)((hash >> 28) & 0x0fffffff);
-        coords[1] = (int)((hash >> 56) & 0xff);
-        coords[2] = (int)(hash & 0x0fffffff);
-
-        return coords;
-    }
-
     public static long GetHashCode(int x, int y, int z)
     {
         return (FixXZ(x) << 28) | (((long)y & 0xff) << 56) | FixXZ(z);
