@@ -80,6 +80,7 @@ public class SafeBuckets extends JavaPlugin
     {
         PluginManager pm = this.getServer().getPluginManager();
         pm.registerEvent(Type.PLAYER_BUCKET_EMPTY, pl, Priority.Monitor, this);
+        pm.registerEvent(Type.PLAYER_BUCKET_FILL,  pl, Priority.Monitor, this);
 
         pm.registerEvent(Type.BLOCK_PLACE,   bl, Priority.Monitor, this);
         pm.registerEvent(Type.BLOCK_PHYSICS, bl, Priority.Highest, this);
