@@ -12,8 +12,6 @@ import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.World;
-import org.bukkit.craftbukkit.entity.CraftPlayer;
-import org.bukkit.entity.Player;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.event.Event.Type;
 import org.bukkit.plugin.PluginManager;
@@ -24,7 +22,6 @@ public class SafeBuckets extends JavaPlugin
 {
     private final SafeBucketsPlayerListener pl = new SafeBucketsPlayerListener(this);
     private final SafeBucketsBlockListener  bl = new SafeBucketsBlockListener(this);
-    private final SafeBucketsEntityListener el = new SafeBucketsEntityListener(this);
     private final SafeBucketsWorldListener  wl = new SafeBucketsWorldListener(this);
 
     public HashMap<String, TreeSet<Long>> bucketBlocks;
@@ -34,13 +31,13 @@ public class SafeBuckets extends JavaPlugin
     {
         File saveFile = new File(this.getDataFolder() + File.separator + "bucketBlocks.dat");
         saveFile.getParentFile().mkdirs();
+
         try {
             FileOutputStream fos = new FileOutputStream(saveFile);
             ObjectOutputStream out = new ObjectOutputStream(fos);
             out.writeObject(bucketBlocks);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+            log.log(Level.SEVERE, null, ex);
         }
     }
 
@@ -52,19 +49,16 @@ public class SafeBuckets extends JavaPlugin
                 FileInputStream fis = new FileInputStream(saveFile);
                 ObjectInputStream in = new ObjectInputStream(fis);
                 bucketBlocks = (HashMap<String, TreeSet<Long>>)in.readObject();
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-                bucketBlocks = new HashMap<String, TreeSet<Long>>();
-                for (World world : Bukkit.getWorlds())
-                    bucketBlocks.put(world.getName(), new TreeSet<Long>());
+                return;
+            } catch (Exception ex) {
+                log.log(Level.SEVERE, null, ex);
             }
         }
-        else {
-            bucketBlocks = new HashMap<String, TreeSet<Long>>();
-            for (World world : Bukkit.getWorlds())
-                bucketBlocks.put(world.getName(), new TreeSet<Long>());
-        }
+
+        //if file doesn't exist or can't be loaded make new storage
+        bucketBlocks = new HashMap<String, TreeSet<Long>>();
+        for (World world : Bukkit.getWorlds())
+            bucketBlocks.put(world.getName(), new TreeSet<Long>());
     }
 
     @Override
@@ -86,18 +80,9 @@ public class SafeBuckets extends JavaPlugin
         pm.registerEvent(Type.BLOCK_PHYSICS, bl, Priority.Highest, this);
         pm.registerEvent(Type.BLOCK_FROMTO,  bl, Priority.Highest, this);
 
-        pm.registerEvent(Type.ENTITY_DAMAGE,  el, Priority.Highest, this);
-        pm.registerEvent(Type.ENTITY_COMBUST, el, Priority.Highest, this);
-
         pm.registerEvent(Type.WORLD_LOAD, wl, Priority.Highest, this);
 
         loadSet();
-
-        File config = new File(getDataFolder() + File.separator + "config.yml");
-        if (!config.exists()) {
-            getConfig().options().copyDefaults(true);
-            saveConfig();
-        }
 
         log.log(Level.INFO, "[" + getDescription().getName() + "] " + getDescription().getVersion() + " enabled.");
     }

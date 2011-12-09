@@ -1,14 +1,5 @@
 package nu.nerd.SafeBuckets;
 
-import java.util.TreeSet;
-
-import net.minecraft.server.AxisAlignedBB;
-import net.minecraft.server.EntityPlayer;
-
-import org.bukkit.Material;
-import org.bukkit.craftbukkit.entity.CraftPlayer;
-import org.bukkit.entity.Entity;
-
 public class Util {
     private static long FixXZ(int n)
     {
@@ -20,6 +11,7 @@ public class Util {
         return (FixXZ(x) << 28) | (((long)y & 0xff) << 56) | FixXZ(z);
     }
 
+    /* not used right now but keeping around for future reference
     public static boolean IntersectsNonBucketLava(TreeSet<Long> bucketBlocks, Entity entity)
     {
         //we only care about players
@@ -53,5 +45,5 @@ public class Util {
         }
 
         return false;
-    }
+    }*/
 }
