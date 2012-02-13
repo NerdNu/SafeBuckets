@@ -21,12 +21,9 @@ public class SafeBucketsListener implements Listener {
         plugin = instance;
     }
     
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockPhysics(BlockPhysicsEvent event)
     {
-        if (event.isCancelled())
-            return;
-
         Material mat = event.getBlock().getType();
         if (mat == Material.STATIONARY_LAVA || mat == Material.STATIONARY_WATER) {
             Long hash = Util.GetHashCode(event.getBlock().getX(),
@@ -39,12 +36,9 @@ public class SafeBucketsListener implements Listener {
         }
     }
     
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockFromTo(BlockFromToEvent event)
     {
-        if (event.isCancelled())
-            return;
-
         Block block = event.getBlock();
         Long hash = Util.GetHashCode(block.getX(), block.getY(), block.getZ());
         String name = block.getWorld().getName();
@@ -69,12 +63,9 @@ public class SafeBucketsListener implements Listener {
         }
     }
     
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent event)
     {
-        if (event.isCancelled())
-            return;
-
         //only stop tracking if source blocks were placed - this makes rollbacks work
         if (!event.getBlockPlaced().isLiquid())
             return;
@@ -88,12 +79,9 @@ public class SafeBucketsListener implements Listener {
         plugin.saveSet();
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerBucketEmpty(PlayerBucketEmptyEvent event)
     {
-        if (event.isCancelled())
-            return;
-
         Block block = event.getBlockClicked().getRelative(event.getBlockFace());
         long hash = Util.GetHashCode(block.getX(), block.getY(), block.getZ());
 
@@ -101,12 +89,9 @@ public class SafeBucketsListener implements Listener {
         plugin.saveSet();
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerBucketFill(PlayerBucketFillEvent event)
     {
-        if (event.isCancelled())
-            return;
-
         Block block = event.getBlockClicked().getRelative(event.getBlockFace());
         long hash = Util.GetHashCode(block.getX(), block.getY(), block.getZ());
 
