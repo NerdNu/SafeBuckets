@@ -1,27 +1,29 @@
 package nu.nerd.SafeBuckets;
 
+import java.util.TreeSet;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.event.block.BlockListener;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.block.BlockFromToEvent;
+import org.bukkit.event.player.PlayerBucketEmptyEvent;
+import org.bukkit.event.player.PlayerBucketFillEvent;
+import org.bukkit.event.world.WorldLoadEvent;
 
-public class SafeBucketsBlockListener extends BlockListener
-{
+public class SafeBucketsListener implements Listener {
+    
     private final SafeBuckets plugin;
-
-    SafeBucketsBlockListener(SafeBuckets instance)
-    {
+    
+    SafeBucketsListener(SafeBuckets instance) {
         plugin = instance;
     }
-
-    @Override
+    
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockPhysics(BlockPhysicsEvent event)
     {
-        if (event.isCancelled())
-            return;
-
         Material mat = event.getBlock().getType();
         if (mat == Material.STATIONARY_LAVA || mat == Material.STATIONARY_WATER) {
             Long hash = Util.GetHashCode(event.getBlock().getX(),
@@ -34,12 +36,9 @@ public class SafeBucketsBlockListener extends BlockListener
         }
     }
     
-    @Override
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockFromTo(BlockFromToEvent event)
     {
-        if (event.isCancelled())
-            return;
-
         Block block = event.getBlock();
         Long hash = Util.GetHashCode(block.getX(), block.getY(), block.getZ());
         String name = block.getWorld().getName();
@@ -63,13 +62,10 @@ public class SafeBucketsBlockListener extends BlockListener
             event.setCancelled(true);
         }
     }
-
-    @Override
+    
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent event)
     {
-        if (event.isCancelled())
-            return;
-
         //only stop tracking if source blocks were placed - this makes rollbacks work
         if (!event.getBlockPlaced().isLiquid())
             return;
@@ -81,5 +77,35 @@ public class SafeBucketsBlockListener extends BlockListener
  
         plugin.bucketBlocks.get(name).remove(hash);
         plugin.saveSet();
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPlayerBucketEmpty(PlayerBucketEmptyEvent event)
+    {
+        Block block = event.getBlockClicked().getRelative(event.getBlockFace());
+        long hash = Util.GetHashCode(block.getX(), block.getY(), block.getZ());
+
+        plugin.bucketBlocks.get(block.getWorld().getName()).add(hash);
+        plugin.saveSet();
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPlayerBucketFill(PlayerBucketFillEvent event)
+    {
+        Block block = event.getBlockClicked().getRelative(event.getBlockFace());
+        long hash = Util.GetHashCode(block.getX(), block.getY(), block.getZ());
+
+        plugin.bucketBlocks.get(block.getWorld().getName()).remove(hash);
+        plugin.saveSet();
+    }
+    
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onWorldLoad(WorldLoadEvent event) {
+        plugin.log.info(event.getWorld().getName() + " loaded");
+        String name = event.getWorld().getName();
+        if (!plugin.bucketBlocks.containsKey(name)) {
+            plugin.bucketBlocks.put(name, new TreeSet<Long>());
+            plugin.saveSet();
+        }
     }
 }

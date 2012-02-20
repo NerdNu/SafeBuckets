@@ -20,9 +20,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class SafeBuckets extends JavaPlugin
 {
-    private final SafeBucketsPlayerListener pl = new SafeBucketsPlayerListener(this);
-    private final SafeBucketsBlockListener  bl = new SafeBucketsBlockListener(this);
-    private final SafeBucketsWorldListener  wl = new SafeBucketsWorldListener(this);
+    private final SafeBucketsListener l = new SafeBucketsListener(this);
 
     public HashMap<String, TreeSet<Long>> bucketBlocks;
     public static final Logger log = Logger.getLogger("Minecraft");
@@ -49,6 +47,10 @@ public class SafeBuckets extends JavaPlugin
                 FileInputStream fis = new FileInputStream(saveFile);
                 ObjectInputStream in = new ObjectInputStream(fis);
                 bucketBlocks = (HashMap<String, TreeSet<Long>>)in.readObject();
+                // storage for new worlds
+                for (World world : Bukkit.getWorlds())
+                    if (!bucketBlocks.containsKey(world.getName()))
+                        bucketBlocks.put(world.getName(), new TreeSet<Long>());
                 return;
             } catch (Exception ex) {
                 log.log(Level.SEVERE, null, ex);
@@ -73,14 +75,7 @@ public class SafeBuckets extends JavaPlugin
     public void onEnable()
     {
         PluginManager pm = this.getServer().getPluginManager();
-        pm.registerEvent(Type.PLAYER_BUCKET_EMPTY, pl, Priority.Monitor, this);
-        pm.registerEvent(Type.PLAYER_BUCKET_FILL,  pl, Priority.Monitor, this);
-
-        pm.registerEvent(Type.BLOCK_PLACE,   bl, Priority.Monitor, this);
-        pm.registerEvent(Type.BLOCK_PHYSICS, bl, Priority.Highest, this);
-        pm.registerEvent(Type.BLOCK_FROMTO,  bl, Priority.Highest, this);
-
-        pm.registerEvent(Type.WORLD_LOAD, wl, Priority.Highest, this);
+        pm.registerEvents(l, this);
 
         loadSet();
 
