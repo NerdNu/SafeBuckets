@@ -55,15 +55,15 @@ public class SafeBucketsListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent event)
     {
+    	Block block = event.getBlockPlaced();
         // If we are replacing water then lets remove it to stop those annoying no flow areas
     	if (!event.getBlockReplacedState().getBlock().isLiquid()) {
     		 plugin.table.removeSafeLiquid(event.getBlockPlaced());
     		 return;
     	}
-    	
     	// Someone is using liquid to replace this block, staff making it flow
-        if (event.getBlockPlaced().isLiquid()) {
-        	plugin.table.removeSafeLiquid(event.getBlockPlaced());
+        if (block.isLiquid()) {
+        	plugin.table.removeSafeLiquid(block);
    		 return;
         }
     }
@@ -72,10 +72,11 @@ public class SafeBucketsListener implements Listener {
     public void onPlayerBucketEmpty(PlayerBucketEmptyEvent event)
     {
         Block block = event.getBlockClicked().getRelative(event.getBlockFace());
-        
         SafeLiquid stat = new SafeLiquid();
 		stat.setWorld(block.getWorld().getName());
-		stat.setHash(Util.GetHashCode(block.getX(), block.getY(), block.getZ()));
+		stat.setX(block.getX());
+		stat.setY(block.getY());
+		stat.setZ(block.getZ());
         plugin.table.save(stat);
     }
 

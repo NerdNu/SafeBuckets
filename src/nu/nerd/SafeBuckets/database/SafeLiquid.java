@@ -14,7 +14,9 @@ public class SafeLiquid {
 	private int id;
 	
 	@NotNull
-	private Long hash;
+	private int x;
+	private int y;
+	private int z;
 	private String world;
 
 	public void setId(int id) {
@@ -25,19 +27,35 @@ public class SafeLiquid {
 		return this.id;
 	}
 
-	public void setHash(Long hash) {
-		this.hash = hash;
-	}
-
-	public Long getHash() {
-		return hash;
-	}
-
 	public void setWorld(String world) {
 		this.world = world;
 	}
 
 	public String getWorld() {
 		return world;
+	}
+
+	public void setZ(int z) {
+		this.z = z;
+	}
+
+	public int getZ() {
+		return z;
+	}
+
+	public void setY(int y) {
+		this.y = y;
+	}
+
+	public int getY() {
+		return y;
+	}
+
+	public void setX(int x) {
+		this.x = x;
+	}
+
+	public int getX() {
+		return x;
 	}
 }

@@ -5,7 +5,6 @@ import org.bukkit.block.Block;
 import com.avaje.ebean.Query;
 
 import nu.nerd.SafeBuckets.SafeBuckets;
-import nu.nerd.SafeBuckets.Util;
 
 public class SafeLiquidTable {
 
@@ -35,7 +34,9 @@ public class SafeLiquidTable {
 			SafeLiquid dbbl = null;
 			Query<SafeLiquid> query = plugin.getDatabase().find(SafeLiquid.class).where()
 			.eq("world", block.getWorld().getName())
-			.eq("hash",Util.GetHashCode(block.getX(), block.getY(), block.getZ()))
+			.eq("x",block.getX())
+			.eq("y",block.getY())
+			.eq("z",block.getZ())
 			.query();
 
 			if (query != null) {
@@ -52,7 +53,9 @@ public class SafeLiquidTable {
 			int retVal = 0;
 			Query<SafeLiquid> query = plugin.getDatabase().find(SafeLiquid.class).where()
 			.eq("world", block.getWorld().getName())
-			.eq("hash",Util.GetHashCode(block.getX(), block.getY(), block.getZ()))
+			.eq("x",block.getX())
+			.eq("y",block.getY())
+			.eq("z",block.getZ())
 			.query();
 			if (query != null) {
 				retVal = query.findRowCount();
