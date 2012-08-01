@@ -1,6 +1,7 @@
 package nu.nerd.SafeBuckets;
 
-import java.util.TreeSet;
+import nu.nerd.SafeBuckets.database.SafeLiquid;
+
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
@@ -11,7 +12,6 @@ import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
-import org.bukkit.event.world.WorldLoadEvent;
 
 public class SafeBucketsListener implements Listener {
     
@@ -26,11 +26,7 @@ public class SafeBucketsListener implements Listener {
     {
         Material mat = event.getBlock().getType();
         if (mat == Material.STATIONARY_LAVA || mat == Material.STATIONARY_WATER) {
-            Long hash = Util.GetHashCode(event.getBlock().getX(),
-                                         event.getBlock().getY(),
-                                         event.getBlock().getZ());
-            String name = event.getBlock().getWorld().getName();
-            if (plugin.bucketBlocks.get(name).contains(hash)) {
+            if (plugin.table.isSafeLiquid(event.getBlock())) { 
                 event.setCancelled(true);
             }
         }
@@ -40,10 +36,7 @@ public class SafeBucketsListener implements Listener {
     public void onBlockFromTo(BlockFromToEvent event)
     {
         Block block = event.getBlock();
-        Long hash = Util.GetHashCode(block.getX(), block.getY(), block.getZ());
-        String name = block.getWorld().getName();
-
-        if (plugin.bucketBlocks.get(name).contains(hash)) {
+        if (plugin.table.isSafeLiquid(event.getBlock())) {
             //somehow our block got changed to flowing, change it back
             if (block.getType() == Material.WATER)
                 block.setTypeId(9, false);
@@ -54,11 +47,7 @@ public class SafeBucketsListener implements Listener {
             return;
         }
 
-        hash = Util.GetHashCode(event.getToBlock().getX(),
-                                event.getToBlock().getY(),
-                                event.getToBlock().getZ());
-
-        if (plugin.bucketBlocks.get(name).contains(hash)) {
+        if (plugin.table.isSafeLiquid(event.getBlock())) {
             event.setCancelled(true);
         }
     }
@@ -66,46 +55,35 @@ public class SafeBucketsListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent event)
     {
-        //only stop tracking if source blocks were placed - this makes rollbacks work
-        if (!event.getBlockPlaced().isLiquid())
-            return;
-
-        Long hash = Util.GetHashCode(event.getBlockPlaced().getX(),
-                                     event.getBlockPlaced().getY(),
-                                     event.getBlockPlaced().getZ());
-        String name = event.getBlockPlaced().getWorld().getName();
- 
-        plugin.bucketBlocks.get(name).remove(hash);
-        plugin.saveSet();
+    	Block block = event.getBlockPlaced();
+        // If we are replacing water then lets remove it to stop those annoying no flow areas
+    	if (!event.getBlockReplacedState().getBlock().isLiquid()) {
+    		 plugin.table.removeSafeLiquid(event.getBlockPlaced());
+    		 return;
+    	}
+    	// Someone is using liquid to replace this block, staff making it flow
+        if (block.isLiquid()) {
+        	plugin.table.removeSafeLiquid(block);
+   		 return;
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerBucketEmpty(PlayerBucketEmptyEvent event)
     {
         Block block = event.getBlockClicked().getRelative(event.getBlockFace());
-        long hash = Util.GetHashCode(block.getX(), block.getY(), block.getZ());
-
-        plugin.bucketBlocks.get(block.getWorld().getName()).add(hash);
-        plugin.saveSet();
+        SafeLiquid stat = new SafeLiquid();
+		stat.setWorld(block.getWorld().getName());
+		stat.setX(block.getX());
+		stat.setY(block.getY());
+		stat.setZ(block.getZ());
+        plugin.table.save(stat);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerBucketFill(PlayerBucketFillEvent event)
     {
         Block block = event.getBlockClicked().getRelative(event.getBlockFace());
-        long hash = Util.GetHashCode(block.getX(), block.getY(), block.getZ());
-
-        plugin.bucketBlocks.get(block.getWorld().getName()).remove(hash);
-        plugin.saveSet();
-    }
-    
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onWorldLoad(WorldLoadEvent event) {
-        plugin.log.info(event.getWorld().getName() + " loaded");
-        String name = event.getWorld().getName();
-        if (!plugin.bucketBlocks.containsKey(name)) {
-            plugin.bucketBlocks.put(name, new TreeSet<Long>());
-            plugin.saveSet();
-        }
+        plugin.table.removeSafeLiquid(block);
     }
 }
