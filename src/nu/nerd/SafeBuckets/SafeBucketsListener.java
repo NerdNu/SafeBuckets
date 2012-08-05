@@ -83,11 +83,12 @@ public class SafeBucketsListener implements Listener {
 	public void onBlockPlace(BlockPlaceEvent event)
 	{
 		Block block = event.getBlockPlaced();
-		// If we are replacing water then lets remove it to stop those annoying no flow areas
-		if (!event.getBlockReplacedState().getBlock().isLiquid()) {
-			plugin.table.removeSafeLiquid(event.getBlockPlaced());
-			return;
-		}
+		// Actually lets not do that
+		//// If we are replacing water then lets remove it to stop those annoying no flow areas
+		//if (!event.getBlockReplacedState().getBlock().isLiquid()) {
+		//	plugin.table.removeSafeLiquid(event.getBlockPlaced());
+		//	return;
+		//}
 		// Someone is using liquid to replace this block, staff making it flow
 		if (block.isLiquid()) {
 			plugin.table.removeSafeLiquid(block);
