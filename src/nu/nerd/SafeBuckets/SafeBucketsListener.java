@@ -9,6 +9,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockDispenseEvent;
+import org.bukkit.event.block.BlockFadeEvent;
 import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -45,7 +46,7 @@ public class SafeBucketsListener implements Listener {
 				if (block.getType() == Material.LAVA)
 					block.setTypeId(11, false);
 				if (block.getType() == Material.STATIONARY_LAVA || block.getType() == Material.STATIONARY_WATER) {
-					if (!plugin.table.isSafeLiquid(event.getBlock())) { 
+					if (!plugin.table.isSafeLiquid(event.getBlock())) {
 						SafeLiquid stat = new SafeLiquid();
 						stat.setWorld(block.getWorld().getName());
 						stat.setX(block.getX());
@@ -76,6 +77,21 @@ public class SafeBucketsListener implements Listener {
 
 		if (plugin.table.isSafeLiquid(event.getBlock())) {
 			event.setCancelled(true);
+		}
+	}
+
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	public void onBlockFade(BlockFadeEvent event)
+	{
+		Block block = event.getBlock();
+		if (!plugin.table.isSafeLiquid(event.getBlock())) {
+			SafeLiquid stat = new SafeLiquid();
+			stat.setWorld(block.getWorld().getName());
+			stat.setX(block.getX());
+			stat.setY(block.getY());
+			stat.setZ(block.getZ());
+			plugin.table.save(stat);
+			return;
 		}
 	}
 
