@@ -86,19 +86,10 @@ public class SafeBucketsListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockFade(BlockFadeEvent event) {
-        Block block = event.getBlock();
-        if (!plugin.isSafeLiquid(event.getBlock())) {
-//			SafeLiquid stat = new SafeLiquid();
-//			stat.setWorld(block.getWorld().getName());
-//			stat.setX(block.getX());
-//			stat.setY(block.getY());
-//			stat.setZ(block.getZ());
-//			plugin.table.save(stat);
-            plugin.addBlockToCacheAndDB(event.getBlock());
-
-            return;
-        }
-    }
+        if (event.getBlock().getType() == Material.ICE) {
+            event.setCancelled(true);
+        } 
+   }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent event) {
