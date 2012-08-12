@@ -1,10 +1,7 @@
 package nu.nerd.SafeBuckets;
 
-import nu.nerd.SafeBuckets.database.SafeLiquid;
-
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -38,27 +35,27 @@ public class SafeBucketsListener implements Listener {
     public void onBlockDispense(BlockDispenseEvent event) {
         Material mat = event.getItem().getType();
         if (mat == Material.LAVA_BUCKET || mat == Material.WATER_BUCKET) {
-            for (BlockFace blockface : BlockFace.values()) {
-                Block block = event.getBlock().getRelative(blockface);
-                if (block.getType() == Material.WATER) {
-                    block.setTypeId(9, false);
-                }
-                if (block.getType() == Material.LAVA) {
-                    block.setTypeId(11, false);
-                }
-                if (block.getType() == Material.STATIONARY_LAVA || block.getType() == Material.STATIONARY_WATER) {
-                    if (!plugin.isSafeLiquid(event.getBlock())) {
-//                        SafeLiquid stat = new SafeLiquid();
-//                        stat.setWorld(block.getWorld().getName());
-//                        stat.setX(block.getX());
-//                        stat.setY(block.getY());
-//                        stat.setZ(block.getZ());
-//                        plugin.table.save(stat);
-                        plugin.addBlockToCacheAndDB(event.getBlock());
-                    }
-                }
-
-            }
+        	event.setCancelled(true);
+//            for (BlockFace blockface : BlockFace.values()) {
+//                Block block = event.getBlock().getRelative(blockface);
+//                if (block.getType() == Material.WATER) {
+//                    block.setTypeId(9, false);
+//                }
+//                if (block.getType() == Material.LAVA) {
+//                    block.setTypeId(11, false);
+//                }
+//                if (block.getType() == Material.STATIONARY_LAVA || block.getType() == Material.STATIONARY_WATER) {
+//                    if (!plugin.isSafeLiquid(event.getBlock())) {
+////                        SafeLiquid stat = new SafeLiquid();
+////                        stat.setWorld(block.getWorld().getName());
+////                        stat.setX(block.getX());
+////                        stat.setY(block.getY());
+////                        stat.setZ(block.getZ());
+////                        plugin.table.save(stat);
+//                        plugin.addBlockToCacheAndDB(event.getBlock());
+//                    }
+//                }
+//            }
         }
     }
 
