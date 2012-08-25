@@ -3,6 +3,7 @@ package nu.nerd.SafeBuckets.database;
 import org.bukkit.block.Block;
 
 import com.avaje.ebean.Query;
+import java.util.List;
 
 import nu.nerd.SafeBuckets.SafeBuckets;
 
@@ -31,7 +32,7 @@ public class SafeLiquidTable {
 			return;
 		}
 		try {
-			SafeLiquid dbbl = null;
+			List<SafeLiquid> dbbl = null;
 			Query<SafeLiquid> query = plugin.getDatabase().find(SafeLiquid.class).where()
 			.eq("world", block.getWorld().getName())
 			.eq("x",block.getX())
@@ -40,8 +41,10 @@ public class SafeLiquidTable {
 			.query();
 
 			if (query != null) {
-				dbbl = query.findUnique();
-				plugin.getDatabase().delete(dbbl);
+				dbbl = query.findList();
+                                for( SafeLiquid s : dbbl){
+                                    plugin.getDatabase().delete(s);
+                                }
 			}
 		} catch(Exception e) {
 			e.printStackTrace();
