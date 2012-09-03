@@ -127,8 +127,11 @@ public class SafeBucketsListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerBucketFill(PlayerBucketFillEvent event) {
-        Block block = event.getBlockClicked().getRelative(event.getBlockFace());
-        plugin.removeSafeLiquidFromCacheAndDB(block);
-        //plugin.table.removeSafeLiquid(block);
+        Material mat = event.getItemStack().getType();
+        if (mat == Material.LAVA_BUCKET || mat == Material.WATER_BUCKET) {
+            Block block = event.getBlockClicked().getRelative(event.getBlockFace());
+            plugin.removeSafeLiquidFromCacheAndDB(block);
+            //plugin.table.removeSafeLiquid(block);
+        }
     }
 }
