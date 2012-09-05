@@ -2,6 +2,7 @@ package nu.nerd.SafeBuckets;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -92,7 +93,10 @@ public class SafeBucketsListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
         if (event.getBlock().getType() == Material.ICE) {
-            event.getBlock().setTypeId(0);
+            if (!event.getPlayer().getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH)) {
+                // If we are breaking the block with an enchanted pick then don't replace it with air, we want it to drop as an item
+                event.getBlock().setTypeId(0);
+            }
         }
     }
     
