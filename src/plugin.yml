@@ -1,5 +1,7 @@
 name: SafeBuckets
 main: nu.nerd.SafeBuckets.SafeBuckets
-version: 0.6
+version: ${project.version}
+description: ${project.description}
+website: ${project.url}
 database: true
 authors: [Travis Watkins, Ed Kellett, Stephen McGregor]

@@ -6,6 +6,8 @@
 	<version>0.5</version>
 	<packaging>jar</packaging>
 	<name>SafeBuckets</name>
+    <description>Make water non-flowing for water from buckets</description>
+    <url>https://github.com/nerdnu/SafeBuckets</url>
 	<scm>
 		<connection>scm:git:git://github.com/nerdnu/SafeBuckets.git</connection>
 		<url>https://github.com/nerdnu/SafeBuckets</url>
