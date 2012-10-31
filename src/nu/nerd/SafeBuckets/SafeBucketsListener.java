@@ -14,6 +14,7 @@ import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
+import org.bukkit.material.Dispenser;  //> Material because we need the getFacing method (DirectionalContainer.class)
 
 public class SafeBucketsListener implements Listener {
 
@@ -37,27 +38,8 @@ public class SafeBucketsListener implements Listener {
     public void onBlockDispense(BlockDispenseEvent event) {
         Material mat = event.getItem().getType();
         if (mat == Material.LAVA_BUCKET || mat == Material.WATER_BUCKET) {
-        	event.setCancelled(true);
-//            for (BlockFace blockface : BlockFace.values()) {
-//                Block block = event.getBlock().getRelative(blockface);
-//                if (block.getType() == Material.WATER) {
-//                    block.setTypeId(9, false);
-//                }
-//                if (block.getType() == Material.LAVA) {
-//                    block.setTypeId(11, false);
-//                }
-//                if (block.getType() == Material.STATIONARY_LAVA || block.getType() == Material.STATIONARY_WATER) {
-//                    if (!plugin.isSafeLiquid(event.getBlock())) {
-////                        SafeLiquid stat = new SafeLiquid();
-////                        stat.setWorld(block.getWorld().getName());
-////                        stat.setX(block.getX());
-////                        stat.setY(block.getY());
-////                        stat.setZ(block.getZ());
-////                        plugin.table.save(stat);
-//                        plugin.addBlockToCacheAndDB(event.getBlock());
-//                    }
-//                }
-//            }
+            Dispenser dispenser = (Dispenser)event.getBlock().getState().getData();
+            plugin.addBlockToCacheAndDB(event.getBlock().getRelative(dispenser.getFacing()));
         }
     }
 
@@ -82,7 +64,9 @@ public class SafeBucketsListener implements Listener {
             event.setCancelled(true);
         }
     }
-
+    
+    
+    // Stop all ice melting, putting every melted ice block in the database would very quickly fill it to excessive sizes
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockFade(BlockFadeEvent event) {
         if (event.getBlock().getType() == Material.ICE) {
@@ -95,7 +79,8 @@ public class SafeBucketsListener implements Listener {
         if (event.getBlock().getType() == Material.ICE) {
             if (!event.getPlayer().getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH)) {
                 // If we are breaking the block with an enchanted pick then don't replace it with air, we want it to drop as an item
-                event.getBlock().setTypeId(0);
+                //event.getBlock().setTypeId(0);
+                plugin.addBlockToCacheAndDB(event.getBlock());
             }
         }
     }
@@ -113,7 +98,6 @@ public class SafeBucketsListener implements Listener {
         if (block.isLiquid()) {
             plugin.removeSafeLiquidFromCacheAndDB(block);
             //plugin.table.removeSafeLiquid(block);
-            return;
         }
     }
 
