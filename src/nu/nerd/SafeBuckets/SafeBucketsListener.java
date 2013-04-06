@@ -1,11 +1,14 @@
 package nu.nerd.SafeBuckets;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.event.block.BlockFadeEvent;
@@ -14,6 +17,7 @@ import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.material.Dispenser;  //> Material because we need the getFacing method (DirectionalContainer.class)
 
 public class SafeBucketsListener implements Listener {
@@ -37,9 +41,28 @@ public class SafeBucketsListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockDispense(BlockDispenseEvent event) {
         Material mat = event.getItem().getType();
-        if (mat == Material.LAVA_BUCKET || mat == Material.WATER_BUCKET) {
-            Dispenser dispenser = (Dispenser)event.getBlock().getState().getData();
-            plugin.addBlockToCacheAndDB(event.getBlock().getRelative(dispenser.getFacing()));
+        if ((mat == Material.LAVA_BUCKET || mat == Material.WATER_BUCKET)) {
+        	if (plugin.getConfig().getBoolean("allow.dispense")) {
+	            Dispenser dispenser = (Dispenser)event.getBlock().getState().getData();
+	        	Block blockDispenser = event.getBlock();
+	        	Block blockDispense = blockDispenser.getRelative(dispenser.getFacing());
+	            plugin.addBlockToCacheAndDB(event.getBlock().getRelative(dispenser.getFacing()));
+	
+	        	if (plugin.getConfig().getBoolean("debug.enabled")) {
+	        		if (plugin.getConfig().getBoolean("debug.output.console")) {
+	    				SafeBuckets.log.info("SafeBuckets: Dispensing liquid at (" + event.getBlock().getX() + ", " + event.getBlock().getY() + ", " + event.getBlock().getZ() + ")");
+	        		}
+	        		if (plugin.getConfig().getBoolean("debug.output.players")) {
+		        		for (Player player : Bukkit.getServer().getOnlinePlayers()) {
+		        			if (player.hasPermission("safebuckets.debug")) {
+		        				player.sendMessage("SafeBuckets: Dispensing liquid from (" + blockDispenser.getX() + ", " + blockDispenser.getY() + ", " + blockDispenser.getZ() + ") to (" + blockDispense.getX() + ", " + blockDispense.getY() + ", " + blockDispense.getZ() + ")");
+		        			}
+		        		}
+	        		}
+	        	}
+        	} else {
+        		event.setCancelled(true);
+        	}
         }
     }
 
@@ -95,7 +118,7 @@ public class SafeBucketsListener implements Listener {
         //	return;
         //}
         // Someone is using liquid to replace this block, staff making it flow
-        if (block.isLiquid()) {
+        if (block.isLiquid() || (!block.isLiquid() && plugin.isSafeLiquid(block))) {
             plugin.removeSafeLiquidFromCacheAndDB(block);
             //plugin.table.removeSafeLiquid(block);
         }
@@ -110,7 +133,12 @@ public class SafeBucketsListener implements Listener {
 //        stat.setY(block.getY());
 //        stat.setZ(block.getZ());
 //        plugin.table.save(stat);
-        plugin.addBlockToCacheAndDB(block);
+
+    	if (plugin.getConfig().getBoolean("allow.bucket")) {
+    		plugin.addBlockToCacheAndDB(block);
+    	} else {
+    		event.setCancelled(true);
+    	}
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -121,5 +149,29 @@ public class SafeBucketsListener implements Listener {
             plugin.removeSafeLiquidFromCacheAndDB(block);
             //plugin.table.removeSafeLiquid(block);
         }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerInteract(PlayerInteractEvent event) {
+    	Player player = event.getPlayer();
+
+    	if (event.isBlockInHand() && event.getItem().getType() == Material.getMaterial(plugin.getConfig().getString("debug.block")) && player.hasPermission("safebuckets.tools.block") && event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+    		Block block = event.getClickedBlock().getRelative(event.getBlockFace()).getLocation().getBlock();
+    		if (plugin.isSafeLiquid(block)) {
+    			player.sendMessage("SafeBuckets: Safe Liquid (X=" + block.getX() + ", Z=" + block.getZ() + ", Y=" + block.getY() + ")");
+    		} else {
+    			player.sendMessage("SafeBuckets: Unsafe Liquid (X=" + block.getX() + ", Z=" + block.getZ() + ", Y=" + block.getY() + ")");
+    		}
+    		event.setCancelled(true);
+    	}
+    	else if (event.hasItem() && event.getItem().getType() == Material.getMaterial(plugin.getConfig().getString("debug.item")) && player.hasPermission("safebuckets.tools.item") && event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+    		Block block = event.getClickedBlock();
+    		if (plugin.isSafeLiquid(block)) {
+    			player.sendMessage("SafeBuckets: Safe Liquid (X=" + block.getX() + ", Z=" + block.getZ() + ", Y=" + block.getY() + ")");
+    		} else {
+    			player.sendMessage("SafeBuckets: Unsafe Liquid (X=" + block.getX() + ", Z=" + block.getZ() + ", Y=" + block.getY() + ")");
+    		}
+    		event.setCancelled(true);
+    	}
     }
 }

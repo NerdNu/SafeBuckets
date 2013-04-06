@@ -1,0 +1,10 @@
+debug:
+  enabled: false
+  output:
+    console: false
+    players: false
+  block: LAPIS_ORE
+  item: BLAZE_ROD
+allow:
+  dispense: true
+  bucket: true

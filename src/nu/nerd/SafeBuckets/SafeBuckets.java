@@ -24,6 +24,7 @@ public class SafeBuckets extends JavaPlugin {
     public HashMap<String, HashSet<Long>> cachedSafeBlocks = new HashMap<String, HashSet<Long>>();
     //public HashSet<Long> cachedSafeBlocks = new HashSet<Long>();
 
+
     @Override
     public void onDisable() {
         log.log(Level.INFO, "[" + getDescription().getName() + "] " + getDescription().getVersion() + " disabled.");
@@ -31,6 +32,8 @@ public class SafeBuckets extends JavaPlugin {
 
     @Override
     public void onEnable() {
+    	saveDefaultConfig();
+
         PluginManager pm = this.getServer().getPluginManager();
         pm.registerEvents(l, this);
 

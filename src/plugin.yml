@@ -5,3 +5,20 @@ description: ${project.description}
 website: ${project.url}
 database: true
 authors: [Travis Watkins, Ed Kellett, Stephen McGregor]
+permissions:
+  safebuckets.*:
+    description: Gives access to all SafeBuckets commands/options
+    children:
+  safebuckets.tools.*:
+    description: Gives access to all SafeBuckets tools
+    children:
+      safebuckets.tools.block: true
+      safebuckets.tools.item: true
+  safebuckets.tools.block:
+    description: Gives access to the SafeBuckets block inspector tool
+    default: op
+  safebuckets.tools.item:
+    description: Gives access to the SafeBuckets item inspector tool
+    default: op
+  safebuckets.debug:
+    description: Shows active SafeBuckets debug informaiton
