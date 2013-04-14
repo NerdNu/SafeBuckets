@@ -1,10 +1,12 @@
 debug:
-  enabled: false
-  output:
-    console: false
-    players: false
+  console: false
+  players: false
+tool:
   block: LAPIS_ORE
   item: BLAZE_ROD
-allow:
-  dispense: true
-  bucket: true
+bucket:
+  enabled: true
+  safe: true
+dispenser:
+  enabled: true
+  safe: true

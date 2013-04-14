@@ -9,6 +9,7 @@ permissions:
   safebuckets.*:
     description: Gives access to all SafeBuckets commands/options
     children:
+      safebuckets.tools.*: true
   safebuckets.tools.*:
     description: Gives access to all SafeBuckets tools
     children:
@@ -16,9 +17,15 @@ permissions:
       safebuckets.tools.item: true
   safebuckets.tools.block:
     description: Gives access to the SafeBuckets block inspector tool
-    default: op
   safebuckets.tools.item:
     description: Gives access to the SafeBuckets item inspector tool
-    default: op
+  safebuckets.reload:
+    description: Allows use of SafeBuckets reload command
   safebuckets.debug:
     description: Shows active SafeBuckets debug informaiton
+commands:
+  sbrl:
+    description: SafeBuckets Reload
+    permission: safebuckets.reload
+    usage: |
+           /<command> : Reloads SafeBucket config

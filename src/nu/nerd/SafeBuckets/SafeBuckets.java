@@ -12,6 +12,8 @@ import javax.persistence.PersistenceException;
 import nu.nerd.SafeBuckets.database.SafeLiquid;
 import nu.nerd.SafeBuckets.database.SafeLiquidTable;
 import org.bukkit.block.Block;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -24,6 +26,16 @@ public class SafeBuckets extends JavaPlugin {
     public HashMap<String, HashSet<Long>> cachedSafeBlocks = new HashMap<String, HashSet<Long>>();
     //public HashSet<Long> cachedSafeBlocks = new HashSet<Long>();
 
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String name, String[] args) {
+        if (command.getName().equalsIgnoreCase("sbrl")) {
+        	reloadConfig();
+        	sender.sendMessage("SafeBuckets: reloaded config");
+        	log.info("SafeBuckets: reloaded config");
+        }
+
+        return false;
+    }
 
     @Override
     public void onDisable() {
