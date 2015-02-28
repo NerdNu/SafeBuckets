@@ -1,5 +1,6 @@
 package nu.nerd.SafeBuckets;
 
+import me.sothatsit.usefulsnippets.EnchantGlow;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
@@ -17,6 +18,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Dispenser;  //> Material because we need the getFacing method (DirectionalContainer.class)
 
 public class SafeBucketsListener implements Listener {
@@ -138,7 +140,15 @@ public class SafeBucketsListener implements Listener {
 
     	if (plugin.getConfig().getBoolean("bucket.enabled")) {
         	if (plugin.getConfig().getBoolean("bucket.safe")) {
-        		plugin.addBlockToCacheAndDB(block);
+				ItemStack itemInHand = event.getPlayer().getItemInHand();
+				if (!EnchantGlow.hasGlow(itemInHand)) {
+					plugin.addBlockToCacheAndDB(block);
+				} else {
+					plugin.removeSafeLiquidFromCacheAndDB(block);
+					if (event.getPlayer().hasPermission("safebuckets.tools.norefill")) {
+						event.setItemStack(itemInHand);
+					}
+				}
         	}
     	} else {
     		event.setCancelled(true);

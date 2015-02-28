@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>SafeBuckets</groupId>
 	<artifactId>SafeBuckets</artifactId>
-	<version>0.6</version>
+	<version>0.7</version>
 	<packaging>jar</packaging>
 	<name>SafeBuckets</name>
     <description>Make water non-flowing for water from buckets</description>
@@ -20,7 +20,7 @@
 		<dependency>
 			<groupId>org.bukkit</groupId>
 			<artifactId>bukkit</artifactId>
-			<version>1.6.2-R0.1-SNAPSHOT</version>
+			<version>1.7.10-R0.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<repositories>
@@ -59,7 +59,7 @@
 						<archive>
 							<addMavenDescriptor>false</addMavenDescriptor>
 						</archive>
-						<finalName>SafeBuckets</finalName>
+						<finalName>SafeBuckets-${project.version}</finalName>
 					</configuration>
 				</plugin>
 				<plugin>
