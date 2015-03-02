@@ -12,6 +12,7 @@ import me.sothatsit.usefulsnippets.EnchantGlow;
 
 import nu.nerd.SafeBuckets.database.SafeLiquid;
 import nu.nerd.SafeBuckets.database.SafeLiquidTable;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -23,6 +24,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitScheduler;
 
 public class SafeBuckets extends JavaPlugin {
 
@@ -174,8 +177,8 @@ public class SafeBuckets extends JavaPlugin {
         stat.setX(block.getX());
         stat.setY(block.getY());
         stat.setZ(block.getZ());
-        table.save(stat);
-        
+
+        table.queueAdd.add(stat);
         addSafeLiquidToCache(stat);
     }
     

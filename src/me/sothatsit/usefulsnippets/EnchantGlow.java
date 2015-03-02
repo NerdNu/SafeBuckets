@@ -9,7 +9,6 @@ import org.bukkit.inventory.ItemStack;
 
 public class EnchantGlow extends EnchantmentWrapper
 {
-
 	private static Enchantment glow;
 
 	public EnchantGlow(int id)
@@ -92,11 +91,11 @@ public class EnchantGlow extends EnchantmentWrapper
 	{
 		if (item == null)
 			return false;
-		
-		if (item.getEnchantments() == null)
-			return false;
 
 		if (getGlow() == null)
+			return false;
+
+		if (item.getEnchantments() == null)
 			return false;
 
 		return item.getEnchantments().containsKey(getGlow());
