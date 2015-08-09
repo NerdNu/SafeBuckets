@@ -8,13 +8,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.persistence.PersistenceException;
+
+import com.sk89q.worldedit.bukkit.WorldEditPlugin;
+import com.sk89q.worldedit.bukkit.selections.CuboidSelection;
+import com.sk89q.worldedit.bukkit.selections.Selection;
 import me.sothatsit.usefulsnippets.EnchantGlow;
 
 import nu.nerd.SafeBuckets.database.SafeLiquid;
 import nu.nerd.SafeBuckets.database.SafeLiquidTable;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -22,6 +24,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -40,6 +43,44 @@ public class SafeBuckets extends JavaPlugin {
 		if (!command.getName().equalsIgnoreCase("sb")) {
 			return false;
 		}
+
+        if (args.length == 1 && args[0].equalsIgnoreCase("reload")) {
+            if (!sender.hasPermission("safebuckets.reload")) {
+                sender.sendMessage(ChatColor.RED + "You do not have permission to use this command!");
+                return true;
+            }
+
+            reloadConfig();
+            sender.sendMessage("SafeBuckets: reloaded config");
+            log.info("SafeBuckets: reloaded config");
+            return true;
+        }
+
+        if (args.length == 1 && args[0].equalsIgnoreCase("flowsel")) {
+            if (!sender.hasPermission("safebuckets.flowsel")) {
+                sender.sendMessage(ChatColor.RED + "You do not have permission to use this command!");
+                return true;
+            }
+            if (!(sender instanceof Player)) {
+                sender.sendMessage("[SafeBuckets] Console flow water!");
+                return true;
+            }
+            if (getWE() == null) {
+                sender.sendMessage(ChatColor.RED + "This feature requires WorldEdit to be installed.");
+                return true;
+            }
+            if (!this.getConfig().getBoolean("flowsel.enabled")) {
+                sender.sendMessage(ChatColor.RED + "That feature is not enabled in the SafeBuckets config.");
+                return true;
+            }
+            Player player = (Player)sender;
+            int blocks = this.flowLiquidsInSelection(player);
+            if (blocks > -1) {
+                String msg = String.format("Flowed %d liquid blocks", blocks);
+                sender.sendMessage(ChatColor.LIGHT_PURPLE + msg);
+            }
+            return true;
+        }
 
 		if (0 <= args.length && args.length <= 2) {
 			if (!(sender instanceof Player)) {
@@ -95,15 +136,6 @@ public class SafeBuckets extends JavaPlugin {
 			else
 				player.getInventory().addItem(newItem);
 
-		} else if (args.length == 1 && args[0].equalsIgnoreCase("reload")) {
-			if (!sender.hasPermission("safebuckets.reload")) {
-				sender.sendMessage(ChatColor.RED + "You do not have permission to use this command!");
-				return true;
-			}
-
-        	reloadConfig();
-        	sender.sendMessage("SafeBuckets: reloaded config");
-        	log.info("SafeBuckets: reloaded config");
 		}
 
         return true;
@@ -216,4 +248,58 @@ public class SafeBuckets extends JavaPlugin {
         list.add(SafeLiquid.class);
         return list;
     }
+
+    public int flowLiquidsInSelection(Player player) {
+        int blocksAffected = 0;
+        int maxSelSize = this.getConfig().getInt("flowsel.maxsize");
+        Selection sel = getWE().getSelection(player);
+        if (sel != null) {
+            if (!(sel instanceof CuboidSelection)) {
+                player.sendMessage(ChatColor.RED + "You must use a cuboid selection!");
+                return -1;
+            }
+            if (sel.getArea() > maxSelSize && maxSelSize != 0) {
+                player.sendMessage(ChatColor.RED + String.format("Your selection must be under %d blocks.", maxSelSize));
+                return -1;
+            }
+            World world = sel.getWorld();
+            Location min = sel.getMinimumPoint();
+            Location max = sel.getMaximumPoint();
+            for (int x = min.getBlockX(); x <= max.getBlockX(); x++) {
+                for (int y = min.getBlockY(); y <= max.getBlockY(); y++) {
+                    for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
+                        Block block = world.getBlockAt(x, y, z);
+                        if (block.getType() == Material.STATIONARY_WATER || block.getType() == Material.STATIONARY_LAVA) {
+                            if (block.getData() != 0x0) continue; //ensure source block
+                            this.removeSafeLiquidFromCacheAndDB(block);
+                            blocksAffected++;
+                            if (block.getType() == Material.STATIONARY_WATER) {
+                                block.setType(Material.WATER);
+                            } else {
+                                block.setType(Material.LAVA);
+                            }
+                        }
+                    }
+                }
+            }
+            int px = player.getLocation().getBlockX();
+            int py = player.getLocation().getBlockY();
+            int pz = player.getLocation().getBlockZ();
+            String msg = String.format("%s flowed %d blocks near x:%d, y:%d, z:%d", player.getName(), blocksAffected, px, py, pz);
+            getLogger().info(msg);
+        } else {
+            player.sendMessage(ChatColor.RED + "You must make a selection first!");
+            return -1;
+        }
+        return blocksAffected;
+    }
+
+    private WorldEditPlugin getWE() {
+        Plugin plugin = getServer().getPluginManager().getPlugin("WorldEdit");
+        if (plugin == null || !(plugin instanceof WorldEditPlugin)) {
+            return null;
+        }
+        return (WorldEditPlugin) plugin;
+    }
+
 }

@@ -10,3 +10,6 @@ bucket:
 dispenser:
   enabled: true
   safe: true
+flowsel:
+  enabled: true
+  maxsize: 0

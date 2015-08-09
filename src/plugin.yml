@@ -5,6 +5,7 @@ description: ${project.description}
 website: ${project.url}
 database: true
 authors: [Travis Watkins, Ed Kellett, Stephen McGregor]
+softdepend: [WorldEdit]
 permissions:
   safebuckets.*:
     description: Gives access to all SafeBuckets commands/options
@@ -21,6 +22,8 @@ permissions:
     description: Gives access to the SafeBuckets item inspector tool
   safebuckets.tools.unsafe:
     description: Gives an unsafe water bucket
+  safebuckets.flowsel:
+    description: Allows the flowing of liquids in a WorldEdit selection
   safebuckets.reload:
     description: Allows use of SafeBuckets reload command
   safebuckets.debug:
