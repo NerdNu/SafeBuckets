@@ -4,6 +4,7 @@ import org.bukkit.block.Block;
 
 import com.avaje.ebean.Query;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -43,50 +44,56 @@ public class SafeLiquidTable {
         scheduler.runTaskAsynchronously(plugin, new Runnable() {
             @Override
             public void run() {
-				save();
+				while (!Thread.currentThread().isInterrupted()) {
+					try {
+						Thread.sleep(100);
+					}
+					catch (Exception e) {
+						e.printStackTrace();
+					}
+					saveQueue();
+				}
+				saveQueue(); //process remaining queued items on shutdown
             }
         });
 	}
 
-	public void save() {
-		while (!Thread.currentThread().isInterrupted()) {
-			try
-			{
-				Thread.sleep(100);
-			}
-			catch (Exception e)
-			{
-				e.printStackTrace();
-			}
+	public void saveQueue() {
 
+		plugin.getDatabase().beginTransaction();
+		try {
 			Iterator i = this.queueAdd.iterator();
 			while (i.hasNext()) {
-				try {
-					SafeLiquid stat = (SafeLiquid) i.next();
-					if (plugin.getConfig().getBoolean("debug.console"))
-						plugin.getLogger().info("Adding   : " + stat.getWorld() + "," + stat.getX() + "," + stat.getY() + "," + stat.getZ());
-					save(stat);
-				} catch(Exception e) {
-					e.printStackTrace();
-				}
+				SafeLiquid stat = (SafeLiquid) i.next();
+				if (plugin.getConfig().getBoolean("debug.console"))
+					plugin.getLogger().info("Adding   : " + stat.getWorld() + "," + stat.getX() + "," + stat.getY() + "," + stat.getZ());
+				save(stat);
 				i.remove();
 			}
+			plugin.getDatabase().commitTransaction();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		} finally {
+			plugin.getDatabase().endTransaction();
+		}
 
-			i = this.queueRemove.iterator();
+		plugin.getDatabase().beginTransaction();
+		try {
+			Iterator i = this.queueRemove.iterator();
 			while (i.hasNext()) {
 				Block block = (Block) i.next();
-
-				try {
-					if (plugin.getConfig().getBoolean("debug.console"))
-						plugin.getLogger().info("Removing : " + block.getWorld().getName() + "," + block.getX() + "," + block.getY() + "," + block.getZ());
-					removeSafeLiquidFromDB(block);
-				} catch(Exception e) {
-					e.printStackTrace();
-				}
-
+				if (plugin.getConfig().getBoolean("debug.console"))
+					plugin.getLogger().info("Removing : " + block.getWorld().getName() + "," + block.getX() + "," + block.getY() + "," + block.getZ());
+				removeSafeLiquidFromDB(block);
 				i.remove();
 			}
+			plugin.getDatabase().commitTransaction();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		} finally {
+			plugin.getDatabase().endTransaction();
 		}
+
 	}
 
 	public void removeSafeLiquid(final Block block){

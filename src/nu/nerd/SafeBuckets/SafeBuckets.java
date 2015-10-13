@@ -171,6 +171,7 @@ public class SafeBuckets extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        this.getServer().getScheduler().cancelTasks(this); //ensure database is unlocked
         log.log(Level.INFO, "[" + getDescription().getName() + "] " + getDescription().getVersion() + " disabled.");
     }
 
@@ -271,7 +272,11 @@ public class SafeBuckets extends JavaPlugin {
                         Block block = world.getBlockAt(x, y, z);
                         if (block.getType() == Material.STATIONARY_WATER || block.getType() == Material.STATIONARY_LAVA) {
                             if (block.getData() != 0x0) continue; //ensure source block
-                            this.removeSafeLiquidFromCacheAndDB(block);
+                            Long l = Util.GetHashCode(block.getX(), block.getY(), block.getZ());
+                            if (cachedSafeBlocks.containsKey(world.getName())) {
+                                cachedSafeBlocks.get(world.getName()).remove(l);
+                            }
+                            table.queueRemove.add(block);
                             blocksAffected++;
                             if (block.getType() == Material.STATIONARY_WATER) {
                                 block.setType(Material.WATER);
