@@ -165,7 +165,7 @@ public class SafeBuckets extends JavaPlugin {
 	public boolean isUnsafeBucket(ItemStack item) {
 		if (item.getType().equals(Material.WATER_BUCKET) || item.getType().equals(Material.LAVA_BUCKET))
 			return EnchantGlow.hasGlow(item);
-		
+
 		return false;
 	}
 
@@ -186,6 +186,10 @@ public class SafeBuckets extends JavaPlugin {
         table = new SafeLiquidTable(this);
 
         log.log(Level.INFO, "[" + getDescription().getName() + "] " + getDescription().getVersion() + " enabled.");
+
+        // Cause the GLOW enchantment to come into being right now, for
+        // compatibility with ModMode item serialization.
+        EnchantGlow.getGlow();
     }
 
     public boolean setupDatabase() {
@@ -214,21 +218,21 @@ public class SafeBuckets extends JavaPlugin {
         table.queueAdd.add(stat);
         addSafeLiquidToCache(stat);
     }
-    
+
     public void removeSafeLiquidFromCacheAndDB(Block block) {
         String world = block.getWorld().getName();
         Long l = Util.GetHashCode(block.getX(), block.getY(), block.getZ());
         if (cachedSafeBlocks.containsKey(world)) {
             cachedSafeBlocks.get(world).remove(l);
         }
-        
+
         table.removeSafeLiquid(block);
     }
-    
+
     public boolean isSafeLiquid(Block block) {
         String world = block.getWorld().getName();
         Long l = Util.GetHashCode(block.getX(), block.getY(), block.getZ());
-        
+
         if (cachedSafeBlocks.containsKey(world)) {
             return cachedSafeBlocks.get(world).contains(l);
         }
