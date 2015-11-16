@@ -1,3 +1,7 @@
 target/
 *.iml
 .idea/
+
+# Eclipse:
+.classpath
+.project
