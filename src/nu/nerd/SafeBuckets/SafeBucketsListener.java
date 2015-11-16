@@ -49,7 +49,7 @@ public class SafeBucketsListener implements Listener {
 
 	        if ((mat == Material.LAVA_BUCKET || mat == Material.WATER_BUCKET)) {
 	        	if (plugin.getConfig().getBoolean("dispenser.enabled")) {
-		        	if (plugin.getConfig().getBoolean("bucket.safe") && plugin.isSafeLiquid(blockDispenser))
+                    if (plugin.getConfig().getBoolean("dispenser.safe") && plugin.isSafeLiquid(blockDispenser))
 		        		plugin.addBlockToCacheAndDB(blockDispense);
 
 		        	String message = "SafeBuckets: Dispensing (" + event.getBlock().getX() + ", " + event.getBlock().getY() + ", " + event.getBlock().getZ() + ") ";
@@ -97,13 +97,13 @@ public class SafeBucketsListener implements Listener {
             event.setCancelled(true);
         }
     }
-    
+
     // Stop all ice melting, putting every melted ice block in the database would very quickly fill it to excessive sizes
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockFade(BlockFadeEvent event) {
         if (event.getBlock().getType() == Material.ICE) {
             event.setCancelled(true);
-        } 
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
