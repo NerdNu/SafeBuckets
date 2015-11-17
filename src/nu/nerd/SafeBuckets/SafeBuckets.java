@@ -12,10 +12,11 @@ import javax.persistence.PersistenceException;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.bukkit.selections.CuboidSelection;
 import com.sk89q.worldedit.bukkit.selections.Selection;
-import me.sothatsit.usefulsnippets.EnchantGlow;
 
+import me.sothatsit.usefulsnippets.EnchantGlow;
 import nu.nerd.SafeBuckets.database.SafeLiquid;
 import nu.nerd.SafeBuckets.database.SafeLiquidTable;
+
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
@@ -23,12 +24,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitScheduler;
 
 public class SafeBuckets extends JavaPlugin {
 
@@ -190,6 +188,16 @@ public class SafeBuckets extends JavaPlugin {
         // Cause the GLOW enchantment to come into being right now, for
         // compatibility with ModMode item serialization.
         EnchantGlow.getGlow();
+    }
+
+    public void debug(String message) {
+        if (getConfig().getBoolean("debug.players")) {
+            getServer().broadcast(message, "safebuckets.debug");
+        }
+
+        if (getConfig().getBoolean("debug.console")) {
+            log.info(message);
+        }
     }
 
     public boolean setupDatabase() {
