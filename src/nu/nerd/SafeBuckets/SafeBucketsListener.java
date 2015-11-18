@@ -1,6 +1,8 @@
 package nu.nerd.SafeBuckets;
 
 import me.sothatsit.usefulsnippets.EnchantGlow;
+
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
@@ -25,8 +27,15 @@ public class SafeBucketsListener implements Listener {
 
     private final SafeBuckets plugin;
 
+    // Cache tool item and block materials since they are accessed every
+    // PlayerInteractEvent.
+    private final Material TOOL_ITEM_MATERIAL;
+    private final Material TOOL_BLOCK_MATERIAL;
+
     SafeBucketsListener(SafeBuckets instance) {
         plugin = instance;
+        TOOL_ITEM_MATERIAL = Material.getMaterial(plugin.getConfig().getString("tool.item"));
+        TOOL_BLOCK_MATERIAL = Material.getMaterial(plugin.getConfig().getString("tool.block"));
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -45,35 +54,34 @@ public class SafeBucketsListener implements Listener {
 	        Material mat = event.getItem().getType();
 	        Dispenser dispenser = (Dispenser)event.getBlock().getState().getData();
 	    	Block blockDispenser = event.getBlock();
-	    	Block blockDispense = blockDispenser.getRelative(dispenser.getFacing());
+            Block blockDispensed = blockDispenser.getRelative(dispenser.getFacing());
 
-	        if ((mat == Material.LAVA_BUCKET || mat == Material.WATER_BUCKET)) {
-	        	if (plugin.getConfig().getBoolean("dispenser.enabled")) {
-		        	if (plugin.getConfig().getBoolean("bucket.safe") && plugin.isSafeLiquid(blockDispenser))
-		        		plugin.addBlockToCacheAndDB(blockDispense);
+	        if (mat == Material.LAVA_BUCKET || mat == Material.WATER_BUCKET) {
+                if (plugin.getConfig().getBoolean("dispenser.enabled")) {
+                    if (plugin.getConfig().getBoolean("dispenser.safe") && plugin.isSafeLiquid(blockDispenser)) {
+                        plugin.addBlockToCacheAndDB(blockDispensed);
+                    }
 
-		        	String message = "SafeBuckets: Dispensing (" + event.getBlock().getX() + ", " + event.getBlock().getY() + ", " + event.getBlock().getZ() + ") ";
-		        	if (!plugin.isSafeLiquid(blockDispenser))
-		        		message += "un";
-		        	message += "safe";
-
-	        		if (plugin.getConfig().getBoolean("debug.players")) {
-	        			plugin.getServer().broadcast(message, "safebuckets.debug");
-	        		}
-
-	        		if (plugin.getConfig().getBoolean("debug.console")) {
-	        			SafeBuckets.log.info(message);
-	        		}
+                    plugin.debug("SafeBuckets: Dispense " + Util.formatCoords(event.getBlock()) + (plugin.isSafeLiquid(event.getBlock()) ? " safe" : " unsafe"));
 	        	} else {
 	        		event.setCancelled(true);
 	        	}
+	        } else if (mat == Material.BUCKET) {
+                if (blockDispensed.getType() == Material.WATER || blockDispensed.getType() == Material.STATIONARY_WATER ||
+                    blockDispensed.getType() == Material.LAVA  || blockDispensed.getType() == Material.STATIONARY_LAVA) {
+                    // Empty bucket taking liquid.
+                    if (plugin.getConfig().getBoolean("dispenser.enabled")) {
+                        // Regardless of whether the dispenser is safe or unsafe, when liquid in front of it
+                        // is removed from the world, it is removed from the DB (i.e. made to flow) too.
+                        plugin.removeSafeLiquidFromCacheAndDB(blockDispensed);
+
+                        plugin.debug("SafeBuckets: Un-Dispense " + Util.formatCoords(event.getBlock()) + (plugin.isSafeLiquid(event.getBlock()) ? " safe" : " unsafe"));
+                    } else {
+                        event.setCancelled(true);
+                    }
+                }
 	        }
 		}
-    	else if (event.getBlock().getType() == Material.WATER || event.getBlock().getType() == Material.STATIONARY_WATER || event.getBlock().getType() == Material.LAVA || event.getBlock().getType() == Material.STATIONARY_LAVA) {
-        	if (plugin.isSafeLiquid(event.getBlock())) {
-                plugin.removeSafeLiquidFromCacheAndDB(event.getBlock());
-        	}
-    	}
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -97,13 +105,13 @@ public class SafeBucketsListener implements Listener {
             event.setCancelled(true);
         }
     }
-    
+
     // Stop all ice melting, putting every melted ice block in the database would very quickly fill it to excessive sizes
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockFade(BlockFadeEvent event) {
         if (event.getBlock().getType() == Material.ICE) {
             event.setCancelled(true);
-        } 
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -166,47 +174,33 @@ public class SafeBucketsListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerInteract(PlayerInteractEvent event) {
-    	Player player = event.getPlayer();
+        Player player = event.getPlayer();
+        if (event.getAction() == Action.LEFT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            if (event.hasItem() && event.getItem().getType() == TOOL_ITEM_MATERIAL && player.hasPermission("safebuckets.tools.item")) {
+                useTool(event, event.getClickedBlock());
+            } else if (event.isBlockInHand() && event.getItem().getType() == TOOL_BLOCK_MATERIAL && player.hasPermission("safebuckets.tools.block")) {
+                useTool(event, event.getClickedBlock().getRelative(event.getBlockFace()));
+            }
+        }
+    }
 
-    	if (event.isBlockInHand() && event.getItem().getType() == Material.getMaterial(plugin.getConfig().getString("tool.block")) && player.hasPermission("safebuckets.tools.block") && event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-    		Block block = event.getClickedBlock().getRelative(event.getBlockFace()).getLocation().getBlock();
-    		if (plugin.isSafeLiquid(block)) {
-    			player.sendMessage("SafeBuckets: (X=" + block.getX() + ", Z=" + block.getZ() + ", Y=" + block.getY() + ") safe");
-    		} else {
-    			player.sendMessage("SafeBuckets: (X=" + block.getX() + ", Z=" + block.getZ() + ", Y=" + block.getY() + ") unsafe");
-    		}
-    		event.setCancelled(true);
-    	}
-    	else if (event.isBlockInHand() && event.getItem().getType() == Material.getMaterial(plugin.getConfig().getString("tool.block")) && player.hasPermission("safebuckets.tools.block") && event.getAction() == Action.LEFT_CLICK_BLOCK) {
-    		Block block = event.getClickedBlock().getRelative(event.getBlockFace()).getLocation().getBlock();
-    		if (plugin.isSafeLiquid(block)) {
-    			player.sendMessage("SafeBuckets: (X=" + block.getX() + ", Z=" + block.getZ() + ", Y=" + block.getY() + ") removed safe");
-                plugin.removeSafeLiquidFromCacheAndDB(block);
-    		} else {
-    			player.sendMessage("SafeBuckets: (X=" + block.getX() + ", Z=" + block.getZ() + ", Y=" + block.getY() + ") set safe");
+    private void useTool(PlayerInteractEvent event, Block block) {
+        event.setCancelled(true);
+
+        boolean isSafe = plugin.isSafeLiquid(block);
+        boolean toggleFlow = (event.getAction() == Action.LEFT_CLICK_BLOCK);
+        if (toggleFlow) {
+            isSafe = !isSafe;
+            if (isSafe) {
                 plugin.addBlockToCacheAndDB(block);
-    		}
-    		event.setCancelled(true);
-    	}
-    	else if (event.hasItem() && event.getItem().getType() == Material.getMaterial(plugin.getConfig().getString("tool.item")) && player.hasPermission("safebuckets.tools.item") && event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-    		Block block = event.getClickedBlock();
-    		if (plugin.isSafeLiquid(block)) {
-    			player.sendMessage("SafeBuckets: (X=" + block.getX() + ", Z=" + block.getZ() + ", Y=" + block.getY() + ") safe");
-    		} else {
-    			player.sendMessage("SafeBuckets: (X=" + block.getX() + ", Z=" + block.getZ() + ", Y=" + block.getY() + ") unsafe");
-    		}
-    		event.setCancelled(true);
-    	}
-    	else if (event.hasItem() && event.getItem().getType() == Material.getMaterial(plugin.getConfig().getString("tool.item")) && player.hasPermission("safebuckets.tools.item") && event.getAction() == Action.LEFT_CLICK_BLOCK) {
-    		Block block = event.getClickedBlock();
-    		if (plugin.isSafeLiquid(block)) {
-    			player.sendMessage("SafeBuckets: (X=" + block.getX() + ", Z=" + block.getZ() + ", Y=" + block.getY() + ") removed safe");
+            } else {
                 plugin.removeSafeLiquidFromCacheAndDB(block);
-    		} else {
-    			player.sendMessage("SafeBuckets: (X=" + block.getX() + ", Z=" + block.getZ() + ", Y=" + block.getY() + ") set safe");
-                plugin.addBlockToCacheAndDB(block);
-    		}
-    		event.setCancelled(true);
-    	}
+            }
+        }
+        String format = toggleFlow ? "&dSafeBuckets toggle: %s is now %s&d."
+                                   : "&dSafeBuckets query: %s is %s&d.";
+        String coords = Util.formatCoords(block);
+        String safeness = isSafe ? "&asafe" : "&cunsafe";
+        event.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&', String.format(format, coords, safeness)));
     }
 }

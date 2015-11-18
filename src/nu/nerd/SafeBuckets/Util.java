@@ -1,5 +1,7 @@
 package nu.nerd.SafeBuckets;
 
+import org.bukkit.block.Block;
+
 public class Util {
     private static long FixXZ(int n)
     {
@@ -9,6 +11,14 @@ public class Util {
     public static long GetHashCode(int x, int y, int z)
     {
         return (FixXZ(x) << 28) | (((long)y & 0xff) << 56) | FixXZ(z);
+    }
+
+    public static String formatCoords(Block block) {
+        return formatCoords(block.getWorld().getName(), block.getX(), block.getY(), block.getZ());
+    }
+
+    public static String formatCoords(String world, int x, int y, int z) {
+        return  "(" + world + ", " + x + ", " + y + ", " + z + ")";
     }
 
     /* not used right now but keeping around for future reference
