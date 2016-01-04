@@ -13,6 +13,7 @@ import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.bukkit.selections.CuboidSelection;
 import com.sk89q.worldedit.bukkit.selections.Selection;
 
+import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import me.sothatsit.usefulsnippets.EnchantGlow;
 import nu.nerd.SafeBuckets.database.SafeLiquid;
 import nu.nerd.SafeBuckets.database.SafeLiquidTable;
@@ -24,6 +25,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -38,9 +40,16 @@ public class SafeBuckets extends JavaPlugin {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String name, String[] args) {
-		if (!command.getName().equalsIgnoreCase("sb")) {
-			return false;
-		}
+		if (command.getName().equalsIgnoreCase("sb")) {
+            return sbCommand(sender, args);
+        }
+        else if (command.getName().equalsIgnoreCase("flow")) {
+            return playerFlowCommand(sender);
+        }
+        return false;
+    }
+
+    private boolean sbCommand(CommandSender sender, String args[]) {
 
         if (args.length == 1 && args[0].equalsIgnoreCase("reload")) {
             if (!sender.hasPermission("safebuckets.reload")) {
@@ -60,7 +69,7 @@ public class SafeBuckets extends JavaPlugin {
                 return true;
             }
             if (!(sender instanceof Player)) {
-                sender.sendMessage("[SafeBuckets] Console flow water!");
+                sender.sendMessage("[SafeBuckets] Console can't flow water!");
                 return true;
             }
             if (getWE() == null) {
@@ -80,62 +89,91 @@ public class SafeBuckets extends JavaPlugin {
             return true;
         }
 
-		if (0 <= args.length && args.length <= 2) {
-			if (!(sender instanceof Player)) {
-				sender.sendMessage("[SafeBuckets] Console can't hold a water bucket!");
-				return true;
-			}
-			if (!sender.hasPermission("safebuckets.tools.unsafe")) {
-				sender.sendMessage(ChatColor.RED + "You do not have permission to use this command!");
-				return true;
-			}
+        if (0 <= args.length && args.length <= 2) {
+            if (!(sender instanceof Player)) {
+                sender.sendMessage("[SafeBuckets] Console can't hold a water bucket!");
+                return true;
+            }
+            if (!sender.hasPermission("safebuckets.tools.unsafe")) {
+                sender.sendMessage(ChatColor.RED + "You do not have permission to use this command!");
+                return true;
+            }
 
-			Player player = (Player)sender;
-			ItemStack itemInHand = player.getItemInHand();
+            Player player = (Player)sender;
+            ItemStack itemInHand = player.getItemInHand();
 
-			Boolean safe = true;
-			Material liquidContainer = Material.WATER_BUCKET;
+            Boolean safe = true;
+            Material liquidContainer = Material.WATER_BUCKET;
 
-			if (itemInHand.getType().equals(Material.WATER_BUCKET) || itemInHand.getType().equals(Material.LAVA_BUCKET)) {
-				safe = isUnsafeBucket(itemInHand);
-				liquidContainer = itemInHand.getType();
-			}
+            if (itemInHand.getType().equals(Material.WATER_BUCKET) || itemInHand.getType().equals(Material.LAVA_BUCKET)) {
+                safe = isUnsafeBucket(itemInHand);
+                liquidContainer = itemInHand.getType();
+            }
 
-			if (args.length >= 1) {
-				if (args[0].equalsIgnoreCase("safe"))
-					safe = true;
-				else if (args[0].equalsIgnoreCase("unsafe"))
-					safe = false;
-				else {
-					sender.sendMessage("[SafeBuckets] Valid conditions are safe and unsafe");
-					return true;
-				}
+            if (args.length >= 1) {
+                if (args[0].equalsIgnoreCase("safe"))
+                    safe = true;
+                else if (args[0].equalsIgnoreCase("unsafe"))
+                    safe = false;
+                else {
+                    sender.sendMessage("[SafeBuckets] Valid conditions are safe and unsafe");
+                    return true;
+                }
 
-				if (args.length == 2) {
-					if (args[1].equalsIgnoreCase("water"))
-						liquidContainer = Material.WATER_BUCKET;
-					else if (args[1].equalsIgnoreCase("lava"))
-						liquidContainer = Material.LAVA_BUCKET;
-					else {
-						sender.sendMessage("[SafeBuckets] Valid liquids are water and lava");
-						return true;
-					}
-				}
-			}
+                if (args.length == 2) {
+                    if (args[1].equalsIgnoreCase("water"))
+                        liquidContainer = Material.WATER_BUCKET;
+                    else if (args[1].equalsIgnoreCase("lava"))
+                        liquidContainer = Material.LAVA_BUCKET;
+                    else {
+                        sender.sendMessage("[SafeBuckets] Valid liquids are water and lava");
+                        return true;
+                    }
+                }
+            }
 
-			ItemStack newItem;
-			if (safe)
-				newItem = getSafeBucket(liquidContainer);
-			else
-				newItem = getUnSafeBucket(liquidContainer);
+            ItemStack newItem;
+            if (safe)
+                newItem = getSafeBucket(liquidContainer);
+            else
+                newItem = getUnSafeBucket(liquidContainer);
 
-			if (itemInHand.getType().equals(liquidContainer) || itemInHand.getType().equals(Material.AIR))
-				player.getInventory().setItemInHand(newItem);
-			else
-				player.getInventory().addItem(newItem);
+            if (itemInHand.getType().equals(liquidContainer) || itemInHand.getType().equals(Material.AIR))
+                player.getInventory().setItemInHand(newItem);
+            else
+                player.getInventory().addItem(newItem);
 
-		}
+        }
 
+        return true;
+
+    }
+
+    private boolean playerFlowCommand(CommandSender sender) {
+        if (getServer().getPluginManager().getPlugin("WorldGuard") == null) {
+            sender.sendMessage(ChatColor.RED + "WorldGuard must be installed to use this feature.");
+            return true;
+        }
+        if (!this.getConfig().getBoolean("playerflow.enabled")) {
+            sender.sendMessage(ChatColor.RED + "That feature is not enabled in the SafeBuckets config.");
+            return true;
+        }
+        if (!sender.hasPermission("safebuckets.playerflow")) {
+            sender.sendMessage(ChatColor.RED + "You do not have permission to use this command!");
+            return true;
+        }
+        if (!(sender instanceof Player)) {
+            sender.sendMessage("[SafeBuckets] Console can't flow water!");
+            return true;
+        }
+        Player player = (Player)sender;
+        if (!player.hasMetadata("safebuckets.playerflow")) {
+            player.setMetadata("safebuckets.playerflow", new FixedMetadataValue(this, true));
+            sender.sendMessage(String.format("%sFlow mode is %son.%s Click a block to enable liquid flow.", ChatColor.DARK_AQUA, ChatColor.YELLOW, ChatColor.DARK_AQUA));
+        } else {
+            player.removeMetadata("safebuckets.playerflow", this);
+            sender.sendMessage(String.format("%sFlow mode is %soff.", ChatColor.DARK_AQUA, ChatColor.YELLOW));
+        }
         return true;
     }
 
@@ -311,12 +349,20 @@ public class SafeBuckets extends JavaPlugin {
         return blocksAffected;
     }
 
-    private WorldEditPlugin getWE() {
+    public WorldEditPlugin getWE() {
         Plugin plugin = getServer().getPluginManager().getPlugin("WorldEdit");
         if (plugin == null || !(plugin instanceof WorldEditPlugin)) {
             return null;
         }
         return (WorldEditPlugin) plugin;
+    }
+
+    public WorldGuardPlugin getWG() {
+        Plugin plugin = getServer().getPluginManager().getPlugin("WorldGuard");
+        if (plugin == null || !(plugin instanceof WorldGuardPlugin)) {
+            return null;
+        }
+        return (WorldGuardPlugin) plugin;
     }
 
 }

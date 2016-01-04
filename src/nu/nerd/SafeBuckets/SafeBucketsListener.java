@@ -1,9 +1,13 @@
 package nu.nerd.SafeBuckets;
 
+import com.sk89q.worldguard.LocalPlayer;
+import com.sk89q.worldguard.protection.ApplicableRegionSet;
+import com.sk89q.worldguard.protection.managers.RegionManager;
 import me.sothatsit.usefulsnippets.EnchantGlow;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -31,11 +35,13 @@ public class SafeBucketsListener implements Listener {
     // PlayerInteractEvent.
     private final Material TOOL_ITEM_MATERIAL;
     private final Material TOOL_BLOCK_MATERIAL;
+    private final boolean PLAYERFLOW_OWNER_MODE;
 
-    SafeBucketsListener(SafeBuckets instance) {
+    public SafeBucketsListener(SafeBuckets instance) {
         plugin = instance;
         TOOL_ITEM_MATERIAL = Material.getMaterial(plugin.getConfig().getString("tool.item"));
         TOOL_BLOCK_MATERIAL = Material.getMaterial(plugin.getConfig().getString("tool.block"));
+        PLAYERFLOW_OWNER_MODE = plugin.getConfig().getBoolean("playerflow.ownermode");
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -172,6 +178,8 @@ public class SafeBucketsListener implements Listener {
         }
     }
 
+    //todo: add player exit/kick handler to remove their flowmode metadata flag
+
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
@@ -180,6 +188,14 @@ public class SafeBucketsListener implements Listener {
                 useTool(event, event.getClickedBlock());
             } else if (event.isBlockInHand() && event.getItem().getType() == TOOL_BLOCK_MATERIAL && player.hasPermission("safebuckets.tools.block")) {
                 useTool(event, event.getClickedBlock().getRelative(event.getBlockFace()));
+            } else if (player.hasPermission("safebuckets.playerflow") && player.hasMetadata("safebuckets.playerflow")) {
+                //todo: rethink possibly only acting on flow mode with an empty hand?
+                //Scenario 1: Need to quickly place a block to stop water from washing you or something away.
+                //Scenario 2: Mobs attack and you don't have time to type /flow
+                //Scenario 3: It's easier to place...flow...place...flow if you can still place water in flow mode.
+                //Scenario 4: Eating.
+                //Easiest solution is probably to ensure the hand is empty since it will interfere the least.
+                handlePlayerFlow(event);
             }
         }
     }
@@ -203,4 +219,53 @@ public class SafeBucketsListener implements Listener {
         String safeness = isSafe ? "&asafe" : "&cunsafe";
         event.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&', String.format(format, coords, safeness)));
     }
+
+    private void handlePlayerFlow(PlayerInteractEvent event) {
+
+        event.setCancelled(true);
+
+        Player player = event.getPlayer();
+        Block block = event.getClickedBlock().getRelative(event.getBlockFace());
+        boolean isSafe = plugin.isSafeLiquid(block);
+
+        if (!block.getType().equals(Material.STATIONARY_WATER) && !block.getType().equals(Material.STATIONARY_LAVA)) {
+            player.sendMessage(ChatColor.RED + "You can only flow water and lava!");
+            return;
+        }
+
+        if (!isPlayerFlowPermitted(player, block)) {
+            String term = (PLAYERFLOW_OWNER_MODE) ? "own" : "are a member of";
+            player.sendMessage(String.format("%sYou can only flow liquids in regions you %s!", ChatColor.RED, term));
+            return;
+        }
+
+        if (isSafe) {
+            plugin.removeSafeLiquidFromCacheAndDB(block);
+            if (block.getType() == Material.STATIONARY_WATER) {
+                block.setType(Material.WATER);
+            } else {
+                block.setType(Material.LAVA);
+            }
+            player.playSound(player.getLocation(), Sound.CLICK, 1.0f, 1.0f);
+            player.sendMessage(String.format("%sFlowed water block at %d,%d,%d.", ChatColor.DARK_AQUA, block.getX(), block.getY(), block.getZ()));
+        }
+
+    }
+
+    private boolean isPlayerFlowPermitted(Player player, Block block) {
+        if (plugin.getWG() == null) return false;
+        RegionManager regions = plugin.getWG().getRegionManager(block.getWorld());
+        LocalPlayer wgPlayer = plugin.getWG().wrapPlayer(player);
+        if (regions != null) {
+            ApplicableRegionSet applicable = regions.getApplicableRegions(block.getLocation());
+            plugin.getLogger().info("Size: " + applicable.size());
+            if (PLAYERFLOW_OWNER_MODE) {
+                return applicable.isOwnerOfAll(wgPlayer) && applicable.size() > 0;
+            } else {
+                return applicable.isMemberOfAll(wgPlayer) && applicable.size() > 0;
+            }
+        }
+        return false;
+    }
+
 }

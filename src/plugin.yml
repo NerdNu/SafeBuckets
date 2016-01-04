@@ -5,17 +5,20 @@ description: ${project.description}
 website: ${project.url}
 database: true
 authors: [Travis Watkins, Ed Kellett, Stephen McGregor]
-softdepend: [WorldEdit]
+softdepend: [WorldEdit, WorldGuard]
 permissions:
   safebuckets.*:
     description: Gives access to all SafeBuckets commands/options
     children:
       safebuckets.tools.*: true
+      safebuckets.playerflow: true
   safebuckets.tools.*:
     description: Gives access to all SafeBuckets tools
     children:
       safebuckets.tools.block: true
       safebuckets.tools.item: true
+  safebuckets.playerflow:
+    description: Gives access to the /flow command for players
   safebuckets.tools.block:
     description: Gives access to the SafeBuckets block inspector tool
   safebuckets.tools.item:
@@ -33,4 +36,6 @@ permissions:
 commands:
   sb:
     description: SafeBuckets command
+  flow:
+    description: Enter "flow mode" and make safe water blocks flow
 

@@ -13,3 +13,6 @@ dispenser:
 flowsel:
   enabled: true
   maxsize: 0
+playerflow:
+  enabled: false
+  ownermode: false
