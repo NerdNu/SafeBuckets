@@ -21,9 +21,7 @@ import org.bukkit.event.block.BlockFadeEvent;
 import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.player.PlayerBucketEmptyEvent;
-import org.bukkit.event.player.PlayerBucketFillEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Dispenser;  //> Material because we need the getFacing method (DirectionalContainer.class)
 
@@ -178,7 +176,19 @@ public class SafeBucketsListener implements Listener {
         }
     }
 
-    //todo: add player exit/kick handler to remove their flowmode metadata flag
+    @EventHandler(priority = EventPriority.NORMAL)
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        if (event.getPlayer().hasMetadata("safebuckets.playerflow")) {
+            event.getPlayer().removeMetadata("safebuckets.playerflow", plugin);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.NORMAL)
+    public void onPlayerKick(PlayerKickEvent event) {
+        if (event.getPlayer().hasMetadata("safebuckets.playerflow")) {
+            event.getPlayer().removeMetadata("safebuckets.playerflow", plugin);
+        }
+    }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onPlayerInteract(PlayerInteractEvent event) {
