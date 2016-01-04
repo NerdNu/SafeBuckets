@@ -189,12 +189,6 @@ public class SafeBucketsListener implements Listener {
             } else if (event.isBlockInHand() && event.getItem().getType() == TOOL_BLOCK_MATERIAL && player.hasPermission("safebuckets.tools.block")) {
                 useTool(event, event.getClickedBlock().getRelative(event.getBlockFace()));
             } else if (player.hasPermission("safebuckets.playerflow") && player.hasMetadata("safebuckets.playerflow")) {
-                //todo: rethink possibly only acting on flow mode with an empty hand?
-                //Scenario 1: Need to quickly place a block to stop water from washing you or something away.
-                //Scenario 2: Mobs attack and you don't have time to type /flow
-                //Scenario 3: It's easier to place...flow...place...flow if you can still place water in flow mode.
-                //Scenario 4: Eating.
-                //Easiest solution is probably to ensure the hand is empty since it will interfere the least.
                 handlePlayerFlow(event);
             }
         }
@@ -222,30 +216,31 @@ public class SafeBucketsListener implements Listener {
 
     private void handlePlayerFlow(PlayerInteractEvent event) {
 
-        event.setCancelled(true);
-
         Player player = event.getPlayer();
         Block block = event.getClickedBlock().getRelative(event.getBlockFace());
+        boolean isLiquid = block.getType().equals(Material.STATIONARY_WATER) || block.getType().equals(Material.STATIONARY_LAVA);
         boolean isSafe = plugin.isSafeLiquid(block);
 
-        if (!block.getType().equals(Material.STATIONARY_WATER) && !block.getType().equals(Material.STATIONARY_LAVA)) {
-            player.sendMessage(ChatColor.RED + "You can only flow water and lava!");
-            return;
-        }
+        // UI niceness to enable some actions in flow mode
+        if (event.hasItem() && event.getItem().getType().isEdible()) return; // Eat
+        if (event.hasBlock() && !player.getItemInHand().getType().equals(Material.AIR) && !event.getAction().equals(Action.LEFT_CLICK_BLOCK)) return; // Place blocks
 
-        if (!isPlayerFlowPermitted(player, block)) {
-            String term = (PLAYERFLOW_OWNER_MODE) ? "own" : "are a member of";
-            player.sendMessage(String.format("%sYou can only flow liquids in regions you %s!", ChatColor.RED, term));
-            return;
-        }
+        if (isLiquid && isSafe) {
+            event.setCancelled(true);
 
-        if (isSafe) {
+            if (!isPlayerFlowPermitted(player, block)) {
+                String term = (PLAYERFLOW_OWNER_MODE) ? "own" : "are a member of";
+                player.sendMessage(String.format("%sYou can only flow liquids in regions you %s!", ChatColor.RED, term));
+                return;
+            }
+
             plugin.removeSafeLiquidFromCacheAndDB(block);
             if (block.getType() == Material.STATIONARY_WATER) {
                 block.setType(Material.WATER);
             } else {
                 block.setType(Material.LAVA);
             }
+
             player.playSound(player.getLocation(), Sound.CLICK, 1.0f, 1.0f);
             player.sendMessage(String.format("%sFlowed water block at %d,%d,%d.", ChatColor.DARK_AQUA, block.getX(), block.getY(), block.getZ()));
         }
