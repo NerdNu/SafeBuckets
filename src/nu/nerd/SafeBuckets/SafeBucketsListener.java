@@ -25,6 +25,8 @@ import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Dispenser;  //> Material because we need the getFacing method (DirectionalContainer.class)
 
+import java.util.Date;
+
 public class SafeBucketsListener implements Listener {
 
     private final SafeBuckets plugin;
@@ -180,6 +182,7 @@ public class SafeBucketsListener implements Listener {
     public void onPlayerQuit(PlayerQuitEvent event) {
         if (event.getPlayer().hasMetadata("safebuckets.playerflow")) {
             event.getPlayer().removeMetadata("safebuckets.playerflow", plugin);
+            plugin.playerFlowTimes.remove(event.getPlayer().getUniqueId());
         }
     }
 
@@ -187,6 +190,7 @@ public class SafeBucketsListener implements Listener {
     public void onPlayerKick(PlayerKickEvent event) {
         if (event.getPlayer().hasMetadata("safebuckets.playerflow")) {
             event.getPlayer().removeMetadata("safebuckets.playerflow", plugin);
+            plugin.playerFlowTimes.remove(event.getPlayer().getUniqueId());
         }
     }
 
@@ -245,6 +249,7 @@ public class SafeBucketsListener implements Listener {
             }
 
             plugin.removeSafeLiquidFromCacheAndDB(block);
+            plugin.playerFlowTimes.put(player.getUniqueId(), new Date());
             if (block.getType() == Material.STATIONARY_WATER) {
                 block.setType(Material.WATER);
             } else {
@@ -253,6 +258,7 @@ public class SafeBucketsListener implements Listener {
 
             player.playSound(player.getLocation(), Sound.CLICK, 1.0f, 1.0f);
             player.sendMessage(String.format("%sFlowed water block at %d,%d,%d.", ChatColor.DARK_AQUA, block.getX(), block.getY(), block.getZ()));
+            plugin.getLogger().info(String.format("%s flowed water block at %d,%d,%d.", player.getName(), block.getX(), block.getY(), block.getZ()));
         }
 
     }

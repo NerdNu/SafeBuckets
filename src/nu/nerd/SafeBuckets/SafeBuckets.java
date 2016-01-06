@@ -1,9 +1,6 @@
 package nu.nerd.SafeBuckets;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,7 +33,7 @@ public class SafeBuckets extends JavaPlugin {
     public SafeLiquidTable table;
     public static final Logger log = Logger.getLogger("Minecraft");
     public HashMap<String, HashSet<Long>> cachedSafeBlocks = new HashMap<String, HashSet<Long>>();
-    //public HashSet<Long> cachedSafeBlocks = new HashSet<Long>();
+    public HashMap<UUID, Date> playerFlowTimes = new HashMap<UUID, Date>();
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String name, String[] args) {
@@ -222,6 +219,8 @@ public class SafeBuckets extends JavaPlugin {
         table = new SafeLiquidTable(this);
 
         log.log(Level.INFO, "[" + getDescription().getName() + "] " + getDescription().getVersion() + " enabled.");
+
+        getServer().getScheduler().runTaskTimer(this, new FlowModeDisableTask(this), 1200L, 1200L);
 
         // Cause the GLOW enchantment to come into being right now, for
         // compatibility with ModMode item serialization.
