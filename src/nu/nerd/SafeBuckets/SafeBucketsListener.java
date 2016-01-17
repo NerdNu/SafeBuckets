@@ -270,7 +270,6 @@ public class SafeBucketsListener implements Listener {
         LocalPlayer wgPlayer = plugin.getWG().wrapPlayer(player);
         if (regions != null) {
             ApplicableRegionSet applicable = regions.getApplicableRegions(block.getLocation());
-            plugin.getLogger().info("Size: " + applicable.size());
             if (PLAYERFLOW_OWNER_MODE) {
                 return applicable.isOwnerOfAll(wgPlayer) && applicable.size() > 0;
             } else {
