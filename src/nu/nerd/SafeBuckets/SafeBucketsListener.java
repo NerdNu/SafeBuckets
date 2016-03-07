@@ -257,7 +257,7 @@ public class SafeBucketsListener implements Listener {
             }
 
             String type = block.getType().toString().toLowerCase();
-            player.playSound(player.getLocation(), Sound.CLICK, 1.0f, 1.0f);
+            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
             player.sendMessage(String.format("%sFlowed %s block at %d,%d,%d.", ChatColor.DARK_AQUA, type, block.getX(), block.getY(), block.getZ()));
             plugin.getLogger().info(String.format("%s flowed %s block at %d,%d,%d.", player.getName(), type, block.getX(), block.getY(), block.getZ()));
         }
