@@ -152,6 +152,13 @@ public class SafeBucketsListener implements Listener {
     public void onPlayerBucketEmpty(PlayerBucketEmptyEvent event) {
         Block block = event.getBlockClicked().getRelative(event.getBlockFace());
 
+        if (event.getBlockClicked().getType().equals(Material.SNOW)) {
+            // Handle single snow layers, which are removed when water is placed, resulting in off-by-one
+            if (block.getData() == 0x0) {
+                block = event.getBlockClicked();
+            }
+        }
+
     	if (plugin.getConfig().getBoolean("bucket.enabled")) {
         	if (plugin.getConfig().getBoolean("bucket.safe")) {
 				ItemStack itemInHand = event.getPlayer().getItemInHand();
