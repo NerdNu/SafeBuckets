@@ -37,3 +37,48 @@ between dispensing safe and unsafe liquids by left-clicking on them with the
 inspector tool item.  It is *not* necessary to enable flow of the dispensed
 liquid block; SafeBuckets will do that itself if the dispenser is set to unsafe.
 
+
+Commands
+--------
+ * `/flow` - Toggle "flow mode" on or off. When on, a player can click a liquid block to make it flow in regions where they have build permission, or regions they own, depending on the configuration.
+ * `/sb reload` - Reload the SafeBuckets configuration.
+ * `/sb [safe|unsafe [water|lava]]`
+   * Convert the player's empty hotbar slot or some kind of bucket (empty,
+     water or lava) into a bucket with the specified safety and liquid type.
+     If the arguments do not specify safety, turn an empty slot or empty bucket
+     into a safe water bucket, or turn a safe bucket into an unsafe bucket of
+     the same type of liquid. If the slot is not empty or a valid bucket, do
+     not give the player any item. If the liquid is not specified, it defaults
+     to water.
+ * `/sb flowsel` - Flow all safe liquid blocks in the current WorldEdit selection.
+ * `/sb reload` - Reload the SafeBuckets configuration.
+
+
+Configuration
+-------------
+| Setting | Description |
+| :--- | :--- |
+| `debug.console` | If true, debug message messages are sent to the console. |
+| `debug.players` | If true, debug message messages are sent to players with the `safebuckets.debug` permissions.|
+| `tool.block` | The material type of the inspector block (defaults to LAPIS_ORE). |
+| `tool.item` | The material type of the inspector item (defaults to BLAZE_ROD). |
+| `bucket.enabled` | If true, players can empty buckets; otherwise, they cannot. |
+| `bucket.safe` | If true, placed liquids do not flow unless placed from a special "unsafe" bucket. |
+| `dispenser.enabled` | If true, dispensers can dispense liquids; otherwise, they cannot. |
+| `dispenser.safe` | If true, liquids placed by dispensers do not flow unless the dispenser has been marked "unsafe". |
+| `flowsel.enabled` | If true, the `/sb flowsel` sub-command can be used. |
+| `flowsel.maxsize` | The maximum selection size allowed when using `/sb flowsel`. If 0 (the default), the allowed selection size is unlimited. |
+| `playerflow.enabled` | If true, the `/flow` command can be used. |
+| `playerflow.ownermode` | If true, players can only flow blocks in regions that they own. If false, they can also flow blocks in regions where they are a member. |
+
+
+Permissions
+-----------
+ * `safebuckets.playerflow` - Permission to use the `/flow` command.
+ * `safebuckets.tools.block` - Permission to use the SafeBuckets block inspector tool block.
+ * `safebuckets.tools.item` - Permission to use the SafeBuckets inspector tool item.
+ * `safebuckets.tools.unsafe` - Permission to summon an unsafe liquid bucket.
+ * `safebuckets.tools.norefill` - Players with this permission do not need to refill the unsafe buckets they empty.
+ * `safebuckets.flowsel` - Permission to use `/sb flowsel`.
+ * `safebuckets.reload` - Permission to use `/sb reload`.
+ * `safebuckets.debug` - Players with this permission receive debug messages.

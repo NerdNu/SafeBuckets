@@ -4,38 +4,36 @@ version: ${project.version}
 description: ${project.description}
 website: ${project.url}
 database: true
-authors: [Travis Watkins, Ed Kellett, Stephen McGregor]
+authors: [Travis Watkins, Ed Kellett, Stephen McGregor, totemo, redwall_hp]
 softdepend: [WorldEdit, WorldGuard]
 permissions:
-  safebuckets.*:
-    description: Gives access to all SafeBuckets commands/options
-    children:
-      safebuckets.tools.*: true
-      safebuckets.playerflow: true
-  safebuckets.tools.*:
-    description: Gives access to all SafeBuckets tools
-    children:
-      safebuckets.tools.block: true
-      safebuckets.tools.item: true
   safebuckets.playerflow:
-    description: Gives access to the /flow command for players
+    description: Permission to use the /flow command.
   safebuckets.tools.block:
-    description: Gives access to the SafeBuckets block inspector tool
+    description: Permission to use the SafeBuckets inspector tool block.
   safebuckets.tools.item:
-    description: Gives access to the SafeBuckets item inspector tool
+    description: Permission to use the SafeBuckets inspector tool item.
   safebuckets.tools.unsafe:
-    description: Gives an unsafe water bucket
-  safebuckets.flowsel:
-    description: Allows the flowing of liquids in a WorldEdit selection
-  safebuckets.reload:
-    description: Allows use of SafeBuckets reload command
-  safebuckets.debug:
-    description: Shows active SafeBuckets debug informaiton
+    description: Permission to summon an unsafe liquid bucket.
   safebuckets.tools.norefill:
-    description: Stop buckets from emptying in survival mode
+    description: Players with this permission do not need to refill the unsafe buckets they empty.
+  safebuckets.flowsel:
+    description: Permission to use `/sb flowsel`.
+  safebuckets.reload:
+    description: Permission to use `/sb reload`.
+  safebuckets.debug:
+    description: Players with this permission receive debug messages.
 commands:
   sb:
-    description: SafeBuckets command
+    description: SafeBuckets moderator command.
+    usage: |
+    
+      §e/<command> reload§f - Reload the SafeBuckets configuration.
+      §e/<command> §eflowsel§f - Flow all safe liquid blocks in the current WorldEdit selection.
+      §e/<command> §f[§esafe§f|§eunsafe§f [§ewater§f|§elava§f]] - Convert the player's empty hotbar slot or some kind of bucket (empty, water or lava) into a bucket with the specified safety and liquid type. If the arguments do not specify safety, turn an empty slot or empty bucket into a safe water bucket, or turn a safe bucket into an unsafe bucket of the same type of liquid. If the slot is not empty or a valid bucket, do not give the player any item. If the liquid is not specified, it defaults to water.
+    
   flow:
-    description: Enter "flow mode" and make safe water blocks flow
-
+    description: Toggle "flow mode" on or off.
+    usage: |
+    
+      §e/<command> - Toggle "flow mode" on or off. When on, a player can click a liquid block to make it flow in regions where they have build permission, or regions they own, depending on the configuration.
