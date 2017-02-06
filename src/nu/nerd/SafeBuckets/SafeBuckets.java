@@ -1,21 +1,20 @@
 package nu.nerd.SafeBuckets;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.persistence.PersistenceException;
 
-import com.sk89q.worldedit.bukkit.WorldEditPlugin;
-import com.sk89q.worldedit.bukkit.selections.CuboidSelection;
-import com.sk89q.worldedit.bukkit.selections.Selection;
-
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
-import me.sothatsit.usefulsnippets.EnchantGlow;
-import nu.nerd.SafeBuckets.database.SafeLiquid;
-import nu.nerd.SafeBuckets.database.SafeLiquidTable;
-
-import org.bukkit.*;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -27,6 +26,15 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.sk89q.worldedit.bukkit.WorldEditPlugin;
+import com.sk89q.worldedit.bukkit.selections.CuboidSelection;
+import com.sk89q.worldedit.bukkit.selections.Selection;
+import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+
+import me.sothatsit.usefulsnippets.EnchantGlow;
+import nu.nerd.SafeBuckets.database.SafeLiquid;
+import nu.nerd.SafeBuckets.database.SafeLiquidTable;
+
 public class SafeBuckets extends JavaPlugin {
 
     private final SafeBucketsListener l = new SafeBucketsListener(this);
@@ -37,10 +45,9 @@ public class SafeBuckets extends JavaPlugin {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String name, String[] args) {
-		if (command.getName().equalsIgnoreCase("sb")) {
+        if (command.getName().equalsIgnoreCase("sb")) {
             return sbCommand(sender, args);
-        }
-        else if (command.getName().equalsIgnoreCase("flow")) {
+        } else if (command.getName().equalsIgnoreCase("flow")) {
             return playerFlowCommand(sender);
         }
         return false;
@@ -77,7 +84,7 @@ public class SafeBuckets extends JavaPlugin {
                 sender.sendMessage(ChatColor.RED + "That feature is not enabled in the SafeBuckets config.");
                 return true;
             }
-            Player player = (Player)sender;
+            Player player = (Player) sender;
             int blocks = this.flowLiquidsInSelection(player);
             if (blocks > -1) {
                 String msg = String.format("Flowed %d liquid blocks", blocks);
@@ -96,10 +103,10 @@ public class SafeBuckets extends JavaPlugin {
                 return true;
             }
 
-            Player player = (Player)sender;
+            Player player = (Player) sender;
             ItemStack itemInHand = player.getItemInHand();
 
-            Boolean safe = true;
+            boolean safe = true;
             Material liquidContainer = Material.WATER_BUCKET;
 
             if (itemInHand.getType().equals(Material.WATER_BUCKET) || itemInHand.getType().equals(Material.LAVA_BUCKET)) {
@@ -108,11 +115,11 @@ public class SafeBuckets extends JavaPlugin {
             }
 
             if (args.length >= 1) {
-                if (args[0].equalsIgnoreCase("safe"))
+                if (args[0].equalsIgnoreCase("safe")) {
                     safe = true;
-                else if (args[0].equalsIgnoreCase("unsafe"))
+                } else if (args[0].equalsIgnoreCase("unsafe")) {
                     safe = false;
-                else {
+                } else {
                     sender.sendMessage("[SafeBuckets] Valid conditions are safe and unsafe");
                     return true;
                 }
@@ -130,16 +137,16 @@ public class SafeBuckets extends JavaPlugin {
             }
 
             ItemStack newItem;
-            if (safe)
+            if (safe) {
                 newItem = getSafeBucket(liquidContainer);
-            else
+            } else {
                 newItem = getUnSafeBucket(liquidContainer);
-
-            if (itemInHand.getType().equals(liquidContainer) || itemInHand.getType().equals(Material.AIR))
+            }
+            if (itemInHand.getType().equals(liquidContainer) || itemInHand.getType().equals(Material.AIR)) {
                 player.getInventory().setItemInHand(newItem);
-            else
+            } else {
                 player.getInventory().addItem(newItem);
-
+            }
         }
 
         return true;
@@ -163,10 +170,11 @@ public class SafeBuckets extends JavaPlugin {
             sender.sendMessage("[SafeBuckets] Console can't flow water!");
             return true;
         }
-        Player player = (Player)sender;
+        Player player = (Player) sender;
         if (!player.hasMetadata("safebuckets.playerflow")) {
             player.setMetadata("safebuckets.playerflow", new FixedMetadataValue(this, true));
-            sender.sendMessage(String.format("%sFlow mode is %son.%s Click a block to enable liquid flow.", ChatColor.DARK_AQUA, ChatColor.YELLOW, ChatColor.DARK_AQUA));
+            sender.sendMessage(String.format("%sFlow mode is %son.%s Click a block to enable liquid flow.",
+                                             ChatColor.DARK_AQUA, ChatColor.YELLOW, ChatColor.DARK_AQUA));
         } else {
             player.removeMetadata("safebuckets.playerflow", this);
             sender.sendMessage(String.format("%sFlow mode is %soff.", ChatColor.DARK_AQUA, ChatColor.YELLOW));
@@ -174,43 +182,44 @@ public class SafeBuckets extends JavaPlugin {
         return true;
     }
 
-	public ItemStack getSafeBucket(Material liquidContainer) {
-		return new ItemStack(liquidContainer);
-	}
+    public ItemStack getSafeBucket(Material liquidContainer) {
+        return new ItemStack(liquidContainer);
+    }
 
-	public ItemStack getUnSafeBucket(Material liquidContainer) {
-		ItemStack unsafeBucket = new ItemStack(liquidContainer);
-		String liquidName = "Water";
-		if (liquidContainer.equals(Material.WATER_BUCKET)) {
-			liquidName = "Water";
-		} else if (liquidContainer.equals(Material.LAVA_BUCKET)) {
-			liquidName = "lava";
-		}
+    public ItemStack getUnSafeBucket(Material liquidContainer) {
+        ItemStack unsafeBucket = new ItemStack(liquidContainer);
+        String liquidName = "Water";
+        if (liquidContainer.equals(Material.WATER_BUCKET)) {
+            liquidName = "Water";
+        } else if (liquidContainer.equals(Material.LAVA_BUCKET)) {
+            liquidName = "lava";
+        }
 
-		ItemMeta meta = unsafeBucket.getItemMeta();
-		meta.setDisplayName("Unsafe " + liquidName + " Bucket");
-		unsafeBucket.setItemMeta(meta);
-		EnchantGlow.addGlow(unsafeBucket);
+        ItemMeta meta = unsafeBucket.getItemMeta();
+        meta.setDisplayName("Unsafe " + liquidName + " Bucket");
+        unsafeBucket.setItemMeta(meta);
+        EnchantGlow.addGlow(unsafeBucket);
 
-		return unsafeBucket;
-	}
+        return unsafeBucket;
+    }
 
-	public boolean isUnsafeBucket(ItemStack item) {
-		if (item.getType().equals(Material.WATER_BUCKET) || item.getType().equals(Material.LAVA_BUCKET))
-			return EnchantGlow.hasGlow(item);
+    public boolean isUnsafeBucket(ItemStack item) {
+        if (item.getType().equals(Material.WATER_BUCKET) || item.getType().equals(Material.LAVA_BUCKET))
+            return EnchantGlow.hasGlow(item);
 
-		return false;
-	}
+        return false;
+    }
 
     @Override
     public void onDisable() {
-        this.getServer().getScheduler().cancelTasks(this); //ensure database is unlocked
+        this.getServer().getScheduler().cancelTasks(this); // ensure database is
+                                                           // unlocked
         log.log(Level.INFO, "[" + getDescription().getName() + "] " + getDescription().getVersion() + " disabled.");
     }
 
     @Override
     public void onEnable() {
-    	saveDefaultConfig();
+        saveDefaultConfig();
 
         PluginManager pm = this.getServer().getPluginManager();
         pm.registerEvents(l, this);
@@ -320,7 +329,9 @@ public class SafeBuckets extends JavaPlugin {
                     for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
                         Block block = world.getBlockAt(x, y, z);
                         if (block.getType() == Material.STATIONARY_WATER || block.getType() == Material.STATIONARY_LAVA) {
-                            if (block.getData() != 0x0) continue; //ensure source block
+                            if (block.getData() != 0x0) {
+                                continue; // ensure source block
+                            }
                             Long l = Util.GetHashCode(block.getX(), block.getY(), block.getZ());
                             if (cachedSafeBlocks.containsKey(world.getName())) {
                                 cachedSafeBlocks.get(world.getName()).remove(l);
