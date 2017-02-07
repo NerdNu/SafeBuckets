@@ -95,7 +95,7 @@ public class SafeBuckets extends JavaPlugin {
 
         if (0 <= args.length && args.length <= 2) {
             if (!(sender instanceof Player)) {
-                sender.sendMessage("[SafeBuckets] Console can't hold a water bucket!");
+                sender.sendMessage("[SafeBuckets] Console can't hold a bucket!");
                 return true;
             }
             if (!sender.hasPermission("safebuckets.tools.unsafe")) {
@@ -104,12 +104,22 @@ public class SafeBuckets extends JavaPlugin {
             }
 
             Player player = (Player) sender;
-            ItemStack itemInHand = player.getItemInHand();
+            ItemStack itemInHand = player.getEquipment().getItemInMainHand();
 
-            boolean safe = true;
+            boolean safe = false;
             Material liquidContainer = Material.WATER_BUCKET;
 
-            if (itemInHand.getType().equals(Material.WATER_BUCKET) || itemInHand.getType().equals(Material.LAVA_BUCKET)) {
+            if (itemInHand != null &&
+                itemInHand.getType() != Material.AIR &&
+                itemInHand.getType() != Material.BUCKET &&
+                itemInHand.getType() != Material.WATER_BUCKET &&
+                itemInHand.getType() != Material.LAVA_BUCKET) {
+                sender.sendMessage(ChatColor.RED +
+                                   "[SafeBuckets] Your main hand must be empty, or holding an empty bucket, water bucket or lava bucket.");
+                return true;
+            }
+
+            if (itemInHand.getType() == Material.WATER_BUCKET || itemInHand.getType() == Material.LAVA_BUCKET) {
                 safe = isUnsafeBucket(itemInHand);
                 liquidContainer = itemInHand.getType();
             }
@@ -120,7 +130,7 @@ public class SafeBuckets extends JavaPlugin {
                 } else if (args[0].equalsIgnoreCase("unsafe")) {
                     safe = false;
                 } else {
-                    sender.sendMessage("[SafeBuckets] Valid conditions are safe and unsafe");
+                    sender.sendMessage(ChatColor.RED + "[SafeBuckets] Valid conditions are safe and unsafe");
                     return true;
                 }
 
@@ -130,27 +140,17 @@ public class SafeBuckets extends JavaPlugin {
                     else if (args[1].equalsIgnoreCase("lava"))
                         liquidContainer = Material.LAVA_BUCKET;
                     else {
-                        sender.sendMessage("[SafeBuckets] Valid liquids are water and lava");
+                        sender.sendMessage(ChatColor.RED + "[SafeBuckets] Valid liquids are water and lava");
                         return true;
                     }
                 }
             }
 
-            ItemStack newItem;
-            if (safe) {
-                newItem = getSafeBucket(liquidContainer);
-            } else {
-                newItem = getUnSafeBucket(liquidContainer);
-            }
-            if (itemInHand.getType().equals(liquidContainer) || itemInHand.getType().equals(Material.AIR)) {
-                player.getInventory().setItemInHand(newItem);
-            } else {
-                player.getInventory().addItem(newItem);
-            }
+            ItemStack newItem = safe ? getSafeBucket(liquidContainer) : getUnSafeBucket(liquidContainer);
+            player.getInventory().setItemInMainHand(newItem);
         }
 
         return true;
-
     }
 
     private boolean playerFlowCommand(CommandSender sender) {
