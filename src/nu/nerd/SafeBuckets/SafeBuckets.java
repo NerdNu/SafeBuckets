@@ -11,6 +11,9 @@ import java.util.logging.Logger;
 
 import javax.persistence.PersistenceException;
 
+import com.avaje.ebean.EbeanServer;
+import nu.nerd.BukkitEbean.EbeanBuilder;
+import nu.nerd.BukkitEbean.EbeanHelper;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -36,6 +39,8 @@ import nu.nerd.SafeBuckets.database.SafeLiquid;
 import nu.nerd.SafeBuckets.database.SafeLiquidTable;
 
 public class SafeBuckets extends JavaPlugin {
+
+    private EbeanServer db;
 
     private final SafeBucketsListener l = new SafeBucketsListener(this);
     public SafeLiquidTable table;
@@ -246,7 +251,12 @@ public class SafeBuckets extends JavaPlugin {
         }
     }
 
+    public EbeanServer getDatabase() {
+        return db;
+    }
+
     public boolean setupDatabase() {
+        db = new EbeanBuilder(this).setClasses(getDatabaseClasses()).build();
         try {
             getDatabase().find(SafeLiquid.class).findRowCount();
             List<SafeLiquid> liquids = getDatabase().find(SafeLiquid.class).findList();
@@ -255,7 +265,7 @@ public class SafeBuckets extends JavaPlugin {
             }
         } catch (PersistenceException ex) {
             getLogger().log(Level.INFO, "First run, initializing database.");
-            installDDL();
+            EbeanHelper.installDDL(db);
             return true;
         }
 
@@ -301,7 +311,6 @@ public class SafeBuckets extends JavaPlugin {
         cachedSafeBlocks.get(world).add(Util.GetHashCode(liquid.getX(), liquid.getY(), liquid.getZ()));
     }
 
-    @Override
     public ArrayList<Class<?>> getDatabaseClasses() {
         ArrayList<Class<?>> list = new ArrayList<Class<?>>();
         list.add(SafeLiquid.class);
