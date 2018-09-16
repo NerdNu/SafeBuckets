@@ -1,59 +1,88 @@
 package nu.nerd.SafeBuckets;
 
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
-public class Util {
-    private static long FixXZ(int n)
-    {
-        return (long)(n + 32000000) & 0x0fffffff;
+// ----------------------------------------------------------------------------------------------------------
+/**
+ * Utilities class.
+ */
+class Util {
+
+    // ------------------------------------------------------------------------------------------------------
+    /**
+     * The number of ticks per second on a Minecraft server.
+     */
+    static final int TPS = 20;
+
+    // ------------------------------------------------------------------------------------------------------
+    /**
+     * Formats a given location into a human-readable ordered triple.
+     *
+     * @param location the location.
+     * @return a human-readable ordered triple as a string.
+     */
+    static String formatCoords(Location location) {
+        return String.format("(x:%d, y:%d, z:%d)", location.getBlockX(),
+                                                 location.getBlockY(),
+                                                 location.getBlockZ());
     }
 
-    public static long GetHashCode(int x, int y, int z)
-    {
-        return (FixXZ(x) << 28) | (((long)y & 0xff) << 56) | FixXZ(z);
+    // ------------------------------------------------------------------------------------------------------
+    /**
+     * Forces a block update on a given block.
+     *
+     * @param block the block.
+     */
+    static void forceBlockUpdate(Block block) {
+        Material currentType = block.getType();
+        block.setType(Material.AIR);
+        Bukkit.getScheduler().runTaskLater(SafeBuckets.PLUGIN, () -> block.setType(currentType, true), 1);
     }
 
-    public static String formatCoords(Block block) {
-        return formatCoords(block.getWorld().getName(), block.getX(), block.getY(), block.getZ());
-    }
+    // ------------------------------------------------------------------------------------------------------
+    /**
+     * A static library of common messages sent to players as they interact with the plugin.
+     */
+    enum Message {
 
-    public static String formatCoords(String world, int x, int y, int z) {
-        return  "(" + world + ", " + x + ", " + y + ", " + z + ")";
-    }
+        // general
+        CONFIG_RELOADED(ChatColor.DARK_AQUA + "Configuration reloaded."),
+        NO_PERMISSION(ChatColor.RED + "You don't have permission to do that!"),
+        FEATURE_NOT_ENABLED(ChatColor.RED + "That feature is not enabled."),
 
-    /* not used right now but keeping around for future reference
-    public static boolean IntersectsNonBucketLava(TreeSet<Long> bucketBlocks, Entity entity)
-    {
-        //we only care about players
-        if (!(entity instanceof CraftPlayer))
-            return false;
+        // Liquid
+        SUPPORTED_LIQUIDS(ChatColor.RED + "Supported liquids: " + ChatColor.WHITE + Liquid.getSupportedTypes()),
 
-        EntityPlayer player = ((CraftPlayer)entity).getHandle();
-        AxisAlignedBB bb = player.boundingBox;
-        int i = (int)Math.floor(bb.a);
-        int j = (int)Math.floor(bb.d + 1.0D);
-        int k = (int)Math.floor(bb.b);
-        int l = (int)Math.floor(bb.e + 1.0D);
-        int i1 = (int)Math.floor(bb.c);
-        int j1 = (int)Math.floor(bb.f + 1.0D);
+        // player flow
+        PLAYERFLOW_NOT_IN_GAME(ChatColor.RED + "You must be in-game to flow liquids!"),
+        PLAYERFLOW_ON(ChatColor.DARK_AQUA + "Flow mode is " + ChatColor.YELLOW + "on"),
+        PLAYERFLOW_OFF(ChatColor.DARK_AQUA + "Flow mode is " + ChatColor.YELLOW + "off"),
 
-        for (int x = i; x < j; ++x) {
-            for (int y = k; y < l; ++y) {
-                for (int z = i1; z < j1; ++z) {
-                    Material mat = entity.getWorld().getBlockAt(x, y, z).getType();
-                    if (mat == Material.STATIONARY_LAVA) {
-                        long hash = Util.GetHashCode(x, y, z);
+        // world edit + flowsel
+        WORLDEDIT_MISSING(ChatColor.RED + "WorldEdit must be installed to do that!"),
+        WORLDEDIT_SELECT_REGION(ChatColor.RED + "You must select a region first!"),
+        WORLDEDIT_FLOWSEL_OVER_MAX(ChatColor.RED + "Your selection must be under " + SafeBuckets.CONFIG.WORLDEDIT_FLOWSEL_MAX_BLOCKS + " blocks!");
 
-                        if (!bucketBlocks.contains(hash))
-                            return true;
-                    }
+        private String _msg;
 
-                    if (mat == Material.LAVA || mat == Material.FIRE)
-                        return true;
-                }
-            }
+        Message(String msg) {
+            _msg = msg;
         }
 
-        return false;
-    }*/
+        void send(Player player) {
+            player.sendMessage(_msg);
+        }
+
+        void send(CommandSender commandSender) {
+            commandSender.sendMessage(_msg);
+        }
+
+    }
+
 }

@@ -1,18 +1,114 @@
-debug:
-  console: false
-  players: false
-tool:
-  block: LAPIS_ORE
-  item: BLAZE_ROD
-bucket:
+#####################################
+# +-------------------------------+ #
+# |            TOOLS              | #
+# +-------------------------------+ #
+#####################################
+tools:
+
+  # Defines the Material for the inspection wand.
+  # - default: BLAZE_ROD
+  inspection-tool: BLAZE_ROD
+
+#####################################
+# +-------------------------------+ #
+# |           PHYSICS             | #
+# +-------------------------------+ #
+#####################################
+physics:
+
+  # Defines if ice melting should be prevented.
+  # - default: true
+  prevent-ice-melt: true
+
+#####################################
+# +-------------------------------+ #
+# |           BUCKETS             | #
+# +-------------------------------+ #
+#####################################
+buckets:
+
+  # Defines if buckets are usable. If false, liquids
+  # will not be placeable using buckets.
+  # - default: true
   enabled: true
-  safe: true
-dispenser:
+
+  # Defines if liquids placed by buckets should be
+  # safe by default.
+  # - default: true
+  default-to-safe: true
+
+#####################################
+# +-------------------------------+ #
+# |          DISPENSERS           | #
+# +-------------------------------+ #
+#####################################
+dispensers:
+
+  # Defines if dispeners are usable. If false, dispen-
+  # sers will not be placeable.
+  # - default: true
   enabled: true
-  safe: true
-flowsel:
+
+  # Defines if liquids placed by dispensers should be
+  # safe by default.
+  # - default: true
+  default-to-safe: true
+
+#####################################
+# +-------------------------------+ #
+# |          WORLDEDIT            | #
+# +-------------------------------+ #
+#####################################
+worldedit:
+
+  # Defines if a WorldEdit hook should be attempted. If
+  # false, all WorldEdit features will be disabled by
+  # default. If true, a hook will be attempted, but
+  # that hook may still fail if the plugin is not found.
+  # - default: true
+  hook: true
+
+  # Options related to flowing liquids by selection.
+  flow-selection:
+
+    # Defines if the flow selection feature is enabled.
+    # - default: true
+    enabled: true
+
+    # Defines the maximum acceptable size (in sq. blocks)
+    # of a WorldEdit selection for flowing. For no
+    # restriction, use 0.
+    # - default: 300
+    maxsize: 100
+
+#####################################
+# +-------------------------------+ #
+# |         PLAYER FLOW           | #
+# +-------------------------------+ #
+#####################################
+player-self-flow:
+
+  # Defines if player self-flow is enabled.
+  # - default: true
   enabled: true
-  maxsize: 0
-playerflow:
-  enabled: false
-  ownermode: false
+
+  # Defines the player-self flow mode. There exist two
+  # options:
+
+  #   OWNER -- players can only self-flow in WorldGuard
+  #            regions they own.
+  #   MEMBER -- players can only self-flow in WorldGuard
+  #            regions of which they are a member.
+
+  # - default: OWNER
+  mode: OWNER
+
+  # The length of time (in seconds) before a player's
+  # self-flow mode is automatically disabled.
+  # - default: 300
+  duration-in-seconds: 300
+
+  # The period (in seconds) between each player self-flow
+  # cache review.
+  # - default: 30
+  cache-review-period-in-seconds: 30

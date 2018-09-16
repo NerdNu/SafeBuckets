@@ -1,10 +1,8 @@
 package nu.nerd.SafeBuckets;
 
-import java.util.Date;
-
+import me.sothatsit.usefulsnippets.EnchantGlow;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
@@ -18,191 +16,147 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.event.block.BlockFadeEvent;
 import org.bukkit.event.block.BlockFromToEvent;
-import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerKickEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.material.Dispenser; //> Material because we need the getFacing method (DirectionalContainer.class)
+import org.bukkit.material.Dispenser;
+import org.bukkit.plugin.java.JavaPlugin;
 
-import com.sk89q.worldguard.LocalPlayer;
-import com.sk89q.worldguard.protection.ApplicableRegionSet;
-import com.sk89q.worldguard.protection.managers.RegionManager;
+import static nu.nerd.SafeBuckets.SafeBuckets.CONFIG;
 
-import me.sothatsit.usefulsnippets.EnchantGlow;
-
+// ----------------------------------------------------------------------------------------------------------
+/**
+ * The event-handling class. See {@link Listener}.
+ */
 public class SafeBucketsListener implements Listener {
 
-    private final SafeBuckets plugin;
-
-    // Cache tool item and block materials since they are accessed every
-    // PlayerInteractEvent.
-    private final Material TOOL_ITEM_MATERIAL;
-    private final Material TOOL_BLOCK_MATERIAL;
-    private final boolean PLAYERFLOW_OWNER_MODE;
-
-    public SafeBucketsListener(SafeBuckets instance) {
-        plugin = instance;
-        TOOL_ITEM_MATERIAL = Material.getMaterial(plugin.getConfig().getString("tool.item"));
-        TOOL_BLOCK_MATERIAL = Material.getMaterial(plugin.getConfig().getString("tool.block"));
-        PLAYERFLOW_OWNER_MODE = plugin.getConfig().getBoolean("playerflow.ownermode");
+    // ------------------------------------------------------------------------------------------------------
+    /**
+     * Constructor. Called once during {@link JavaPlugin#onEnable()}.
+     */
+    SafeBucketsListener() {
+        Bukkit.getPluginManager().registerEvents(this, SafeBuckets.PLUGIN);
     }
 
+    // ------------------------------------------------------------------------------------------------------
+    /**
+     * Handles dispensers.
+     *
+     * When a dispenser fires there exist two cases (excluding no action) which are handled: when the item is
+     *      (i) a filled bucket -- the resulting liquid block will be made safe; or
+     *      (ii) an empty bucket -- the bucket will take the liquid block (if present) and make that location
+     *                              unsafe once again.
+     */
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onBlockPhysics(BlockPhysicsEvent event) {
-        Material mat = event.getBlock().getType();
-        if (mat == Material.STATIONARY_LAVA || mat == Material.STATIONARY_WATER) {
-            if (plugin.isSafeLiquid(event.getBlock())) {
+    public void onBlockDispense(BlockDispenseEvent event) {
+        Material material = event.getItem().getType();
+        Dispenser dispenser = (Dispenser) event.getBlock().getState().getData();
+        Block dispensed = event.getBlock().getRelative(dispenser.getFacing());
+
+        if (Liquid.isSupportedType(material)) { // filled buckets
+            if (CONFIG.DISPENSERS_ENABLED) {
+                if (CONFIG.DISPENSERS_SAFE && SafeBuckets.isSafe(event.getBlock())) {
+                    SafeBuckets.setSafe(dispensed, true);
+                }
+            } else {
+                event.setCancelled(true);
+            }
+        } else if (material == Material.BUCKET) { // empty buckets
+            if (Liquid.isSupportedType(dispensed.getType())) {
+                if (CONFIG.DISPENSERS_ENABLED) {
+                    SafeBuckets.removeSafe(dispensed);
+                }
+            } else {
                 event.setCancelled(true);
             }
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onBlockDispense(BlockDispenseEvent event) {
-        if (event.getBlock().getState().getData() instanceof Dispenser) {
-            Material mat = event.getItem().getType();
-            Dispenser dispenser = (Dispenser) event.getBlock().getState().getData();
-            Block blockDispenser = event.getBlock();
-            Block blockDispensed = blockDispenser.getRelative(dispenser.getFacing());
-
-            if (mat == Material.LAVA_BUCKET || mat == Material.WATER_BUCKET) {
-                if (plugin.getConfig().getBoolean("dispenser.enabled")) {
-                    if (plugin.getConfig().getBoolean("dispenser.safe") && plugin.isSafeLiquid(blockDispenser)) {
-                        plugin.addBlockToCacheAndDB(blockDispensed);
-                    }
-
-                    plugin.debug("SafeBuckets: Dispense " + Util.formatCoords(event.getBlock())
-                                 + (plugin.isSafeLiquid(event.getBlock()) ? " safe" : " unsafe"));
-                } else {
-                    event.setCancelled(true);
-                }
-            } else if (mat == Material.BUCKET) {
-                if (blockDispensed.getType() == Material.WATER || blockDispensed.getType() == Material.STATIONARY_WATER ||
-                    blockDispensed.getType() == Material.LAVA || blockDispensed.getType() == Material.STATIONARY_LAVA) {
-                    // Empty bucket taking liquid.
-                    if (plugin.getConfig().getBoolean("dispenser.enabled")) {
-                        // Regardless of whether the dispenser is safe or
-                        // unsafe, when liquid in front of it is removed from
-                        // the world, it is removed from the DB (i.e. made to
-                        // flow) too.
-                        plugin.removeSafeLiquidFromCacheAndDB(blockDispensed);
-
-                        plugin.debug("SafeBuckets: Un-Dispense " + Util.formatCoords(event.getBlock())
-                                     + (plugin.isSafeLiquid(event.getBlock()) ? " safe" : " unsafe"));
-                    } else {
-                        event.setCancelled(true);
-                    }
-                }
-            }
-        }
-    }
-
+    // ------------------------------------------------------------------------------------------------------
+    /**
+     * Prevent liquids from flowing.
+     */
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockFromTo(BlockFromToEvent event) {
-        Block block = event.getBlock();
-        // if (plugin.table.isSafeLiquid(event.getBlock())) {
-        if (plugin.isSafeLiquid(event.getBlock())) {
-            // somehow our block got changed to flowing, change it back
-            if (block.getType() == Material.WATER) {
-                block.setTypeId(9, false);
-            }
-            if (block.getType() == Material.LAVA) {
-                block.setTypeId(11, false);
-            }
-
-            event.setCancelled(true);
-            return;
-        }
-
-        if (plugin.isSafeLiquid(event.getBlock())) {
+        if (SafeBuckets.isSafe(event.getBlock())) {
             event.setCancelled(true);
         }
     }
 
-    // Stop all ice melting, putting every melted ice block in the database
-    // would very quickly fill it to excessive sizes
+    /*
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onWorldEdit(EditSessionEvent event) {
+        System.out.println("edit session");
+        event.setExtent(new AbstractDelegateExtent(event.getExtent()) {
+            @Override
+            public boolean setBlock(Vector location, BlockStateHolder block) throws WorldEditException {
+                System.out.println("caught");
+                Material newMaterial = BukkitAdapter.adapt(block.getBlockType());
+                if (Liquid.isSupportedType(newMaterial) && event.getWorld() != null) {
+                    World world = BukkitAdapter.adapt(event.getWorld());
+                    Bukkit.getScheduler().runTaskLater(SafeBuckets.PLUGIN, () -> {
+                        Block newBlock = world.getBlockAt(location.getBlockX(), location.getBlockY(), location.getBlockZ());
+                        SafeBuckets.setSafe(newBlock, true);
+                        System.out.println("Set safe after WE: " + newBlock);
+                    }, 1);
+                }
+                return super.setBlock(location, block);
+            }
+        });
+    }*/
+
+    // ------------------------------------------------------------------------------------------------------
+    /**
+     * Prevents ice from melting.
+     */
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockFade(BlockFadeEvent event) {
-        if (event.getBlock().getType() == Material.ICE) {
+        if (CONFIG.PREVENT_ICE_MELT && event.getBlock().getType() == Material.ICE) {
             event.setCancelled(true);
         }
     }
 
+    // ------------------------------------------------------------------------------------------------------
+    /**
+     * When a block of ice is broken the water that replaces it will be made safe, unless the player
+     * is holding a tool enchanted with Silk Touch (in which case no water appears). When a dispenser is
+     * broken, remove its safety status.
+     */
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
         Block block = event.getBlock();
-        if (block.getType() == Material.ICE) {
-            if (!event.getPlayer().getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH)) {
-                // If we are breaking the block with an enchanted pick then
-                // don't replace it with air, we want it to drop as an item
-                // event.getBlock().setTypeId(0);
-                plugin.addBlockToCacheAndDB(block);
+        FrozenLiquid frozenLiquid = FrozenLiquid.getType(block);
+        if (frozenLiquid != null && frozenLiquid.meltsWhenBroken()) {
+            if (!event.getPlayer().getEquipment().getItemInMainHand().containsEnchantment(Enchantment.SILK_TOUCH)) {
+                // make the ice block safe to prevent flowing immediately upon breaking
+                SafeBuckets.setSafe(block, true);
+
+                // wait one tick and then make the new water block safe for persistence, otherwise
+                // BlockStore will "forget" the ice (since it stops existing) and the water will
+                // flow if it recieves a block update after the next restart
+                Bukkit.getScheduler().runTaskLater(SafeBuckets.PLUGIN, () -> {
+                    Block meltedBlock = block.getWorld().getBlockAt(block.getLocation());
+                    SafeBuckets.setSafe(meltedBlock, true);
+                }, 1);
             }
         } else if (block.getType() == Material.DISPENSER) {
-            plugin.removeSafeLiquidFromCacheAndDB(block);
+            SafeBuckets.removeSafe(block);
         }
     }
 
+    // ------------------------------------------------------------------------------------------------------
+    /**
+     * Automatically makes placed dispensers safe.
+     */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent event) {
-        Block block = event.getBlockPlaced();
-
-        // Someone is using liquid to replace this block, staff making it flow
-        if (block.isLiquid() || (!block.isLiquid() && plugin.isSafeLiquid(block))) {
-            plugin.removeSafeLiquidFromCacheAndDB(block);
-        } else if (block.getType() == Material.DISPENSER) {
-            plugin.addBlockToCacheAndDB(block);
-        }
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onPlayerBucketEmpty(PlayerBucketEmptyEvent event) {
-        Player player = event.getPlayer();
-        Block block = event.getBlockClicked();
-
-        // Handle single snow layers, which are removed when water is
-        // placed, resulting in off-by-one
-        boolean isSingleLayerSnow = (block.getType() == Material.SNOW && block.getData() == 0);
-        if (!isSingleLayerSnow) {
-            block = block.getRelative(event.getBlockFace());
-        }
-
-        if (player.hasPermission("safebuckets.debug")) {
-            plugin.debug(ChatColor.YELLOW + player.getName() +
-                         " clicked " + block.getType() + ":" + (int) block.getData() +
-                         " at " + Util.formatCoords(block));
-        }
-
-        if (plugin.getConfig().getBoolean("bucket.enabled")) {
-            if (plugin.getConfig().getBoolean("bucket.safe")) {
-                ItemStack itemInHand = player.getEquipment().getItemInMainHand().clone();
-                if (EnchantGlow.hasGlow(itemInHand)) {
-                    plugin.removeSafeLiquidFromCacheAndDB(block);
-                    if (player.getGameMode() == GameMode.SURVIVAL && player.hasPermission("safebuckets.tools.norefill")) {
-                        ItemStack resultBucket = new ItemStack(event.getBucket());
-                        EnchantGlow.addGlow(resultBucket);
-                        // https://hub.spigotmc.org/jira/projects/SPIGOT/issues/SPIGOT-2560
-                        // PlayerBucketEmptyEvent.setItemStack() does not affect
-                        // player's item in hand. Work around using task.
-                        // event.setItemStack(resultBucket);
-                        int currentSlot = player.getInventory().getHeldItemSlot();
-                        Bukkit.getScheduler().runTask(plugin, () -> {
-                            PlayerInventory inv = player.getInventory();
-                            if (inv.getHeldItemSlot() == currentSlot) {
-                                ItemStack item = inv.getItemInMainHand();
-                                if (item != null && item.getType() == Material.BUCKET) {
-                                    inv.setItemInMainHand(resultBucket);
-                                }
-                            }
-                        });
-                    }
-                } else {
-                    plugin.addBlockToCacheAndDB(block);
+        if (CONFIG.DISPENSERS_ENABLED) {
+            if (CONFIG.DISPENSERS_SAFE) {
+                Block block = event.getBlockPlaced();
+                if (block.getType() == Material.DISPENSER) {
+                    SafeBuckets.setSafe(block, true);
                 }
             }
         } else {
@@ -210,120 +164,142 @@ public class SafeBucketsListener implements Listener {
         }
     }
 
+    // ------------------------------------------------------------------------------------------------------
+    /**
+     * Handles liquids being placed by bucket. Includes logic for staff flowing.
+     */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPlayerBucketEmpty(PlayerBucketEmptyEvent event) {
+        Player player = event.getPlayer();
+        Block block = event.getBlockClicked().getRelative(event.getBlockFace());
+
+        if (CONFIG.BUCKETS_ENABLED) {
+            if (CONFIG.BUCKETS_SAFE) {
+                Liquid liquid = Liquid.getType(new ItemStack(event.getBucket()));
+                ItemStack itemInHand = player.getEquipment().getItemInMainHand().clone();
+                if (liquid != null && EnchantGlow.hasGlow(itemInHand)) { // staff flow
+                    // flow
+                    SafeBuckets.setSafe(block, false);
+
+                    // replenish
+                    final ItemStack bucket = liquid.getBucket(false);
+                    Bukkit.getScheduler().runTaskLater(SafeBuckets.PLUGIN,
+                                                       () -> player.getEquipment().setItemInMainHand(bucket),
+                                                       1);
+                } else {
+                    SafeBuckets.setSafe(block, true);
+                }
+            }
+        } else {
+            event.setCancelled(true);
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------------------
+    /**
+     * When a liquid is picked up via a bucket, remove that block's safe designation.
+     */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerBucketFill(PlayerBucketFillEvent event) {
-        Material mat = event.getItemStack().getType();
-        if (mat == Material.LAVA_BUCKET || mat == Material.WATER_BUCKET) {
+        Material material = event.getItemStack().getType();
+        if (Liquid.isSupportedType(material)) {
             Block block = event.getBlockClicked().getRelative(event.getBlockFace());
-            plugin.removeSafeLiquidFromCacheAndDB(block);
+            SafeBuckets.removeSafe(block);
         }
     }
 
-    @EventHandler(priority = EventPriority.NORMAL)
-    public void onPlayerQuit(PlayerQuitEvent event) {
-        if (event.getPlayer().hasMetadata("safebuckets.playerflow")) {
-            event.getPlayer().removeMetadata("safebuckets.playerflow", plugin);
-            plugin.playerFlowTimes.remove(event.getPlayer().getUniqueId());
-        }
-    }
-
-    @EventHandler(priority = EventPriority.NORMAL)
-    public void onPlayerKick(PlayerKickEvent event) {
-        if (event.getPlayer().hasMetadata("safebuckets.playerflow")) {
-            event.getPlayer().removeMetadata("safebuckets.playerflow", plugin);
-            plugin.playerFlowTimes.remove(event.getPlayer().getUniqueId());
-        }
-    }
-
+    // ------------------------------------------------------------------------------------------------------
+    /**
+     * Handle players querying the safety of blocks and players trying to self-flow.
+     */
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         if (event.getAction() == Action.LEFT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-            if (event.hasItem() && event.getItem().getType() == TOOL_ITEM_MATERIAL && player.hasPermission("safebuckets.tools.item")) {
-                useTool(event, event.getClickedBlock());
-            } else if (event.isBlockInHand() && event.getItem().getType() == TOOL_BLOCK_MATERIAL && player.hasPermission("safebuckets.tools.block")) {
-                useTool(event, event.getClickedBlock().getRelative(event.getBlockFace()));
-            } else if (player.hasPermission("safebuckets.playerflow") && player.hasMetadata("safebuckets.playerflow")) {
-                handlePlayerFlow(event);
+            if (event.hasItem() && event.getItem().getType() == CONFIG.TOOL_ITEM) {
+                if (player.hasPermission("safebuckets.tools.item")) {
+                    useTool(event, event.getClickedBlock());
+                }
+            }
+            if (event.getAction() != Action.RIGHT_CLICK_BLOCK) {
+                if (player.hasPermission("safebuckets.playerflow") && PlayerFlowCache.isCached(player)) {
+                    handlePlayerFlow(event);
+                }
             }
         }
     }
 
+    // ------------------------------------------------------------------------------------------------------
+    /**
+     * Handles tool-based actions: safety status querying, and safety status toggling.
+     */
     private void useTool(PlayerInteractEvent event, Block block) {
         event.setCancelled(true);
 
-        boolean isSafe = plugin.isSafeLiquid(block);
-        boolean toggleFlow = (event.getAction() == Action.LEFT_CLICK_BLOCK);
-        if (toggleFlow) {
+        boolean isSafe = SafeBuckets.isSafe(block);
+        boolean isToggle = event.getAction() == Action.LEFT_CLICK_BLOCK;
+        if (isToggle) {
             isSafe = !isSafe;
-            if (isSafe) {
-                plugin.addBlockToCacheAndDB(block);
-            } else {
-                plugin.removeSafeLiquidFromCacheAndDB(block);
-            }
+            SafeBuckets.setSafe(block, isSafe);
         }
-        String format = toggleFlow ? "&dSafeBuckets toggle: %s is now %s&d."
-                                   : "&dSafeBuckets query: %s is %s&d.";
-        String coords = Util.formatCoords(block);
-        String safeness = isSafe ? "&asafe" : "&cunsafe";
-        event.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&', String.format(format, coords, safeness)));
+
+        String msg = new StringBuilder().append(ChatColor.DARK_AQUA)
+                                        .append("SafeBuckets ")
+                                        .append(isToggle ? "toggle" : "query")
+                                        .append(": ")
+                                        .append(Util.formatCoords(block.getLocation()))
+                                        .append(" is ")
+                                        .append(isToggle ? "now " : " ")
+                                        .append(ChatColor.YELLOW)
+                                        .append(isSafe ? "safe" : "unsafe")
+                                        .append(ChatColor.DARK_AQUA)
+                                        .append(".")
+                                        .toString();
+
+        event.getPlayer().sendMessage(msg);
     }
 
+    // ------------------------------------------------------------------------------------------------------
+    /**
+     * Handles players attempting to flow their own liquid.
+     */
     private void handlePlayerFlow(PlayerInteractEvent event) {
-
         Player player = event.getPlayer();
         Block block = event.getClickedBlock().getRelative(event.getBlockFace());
-        boolean isLiquid = block.getType().equals(Material.STATIONARY_WATER) || block.getType().equals(Material.STATIONARY_LAVA);
-        boolean isSafe = plugin.isSafeLiquid(block);
+        Liquid liquid = Liquid.getType(block);
+        boolean isSafe = SafeBuckets.isSafe(block);
 
-        // UI niceness to enable some actions in flow mode
+        // allow players to eat while in flow mode
         if (event.hasItem() && event.getItem().getType().isEdible()) {
-            return; // Eat
+            return;
         }
-        if (event.hasBlock() && !player.getEquipment().getItemInMainHand().getType().equals(Material.AIR) &&
-            !event.getAction().equals(Action.LEFT_CLICK_BLOCK)) {
-            return; // Place blocks
+
+        // allow players to place blocks while in flow mode
+        if (event.hasBlock() && !player.getEquipment().getItemInMainHand().getType().equals(Material.AIR)
+                             && !event.getAction().equals(Action.LEFT_CLICK_BLOCK)) {
+            return;
         }
-        if (isLiquid && isSafe) {
+
+        // if the liquid is a supported type and is safe, it is eligible to be flowed
+        if (liquid != null && isSafe) {
             event.setCancelled(true);
-
-            if (!isPlayerFlowPermitted(player, block)) {
-                String term = (PLAYERFLOW_OWNER_MODE) ? "own" : "are a member of";
-                player.sendMessage(String.format("%sYou can only flow liquids in regions you %s!", ChatColor.RED, term));
-                return;
-            }
-
-            plugin.removeSafeLiquidFromCacheAndDB(block);
-            plugin.playerFlowTimes.put(player.getUniqueId(), new Date());
-            if (block.getType() == Material.STATIONARY_WATER) {
-                block.setType(Material.WATER);
+            if (SafeBuckets.isPlayerFlowPermitted(player, block)) {
+                SafeBuckets.setSafe(block, false);
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+                player.sendMessage(new StringBuilder().append(ChatColor.DARK_AQUA)
+                                                      .append("Flowed ")
+                                                      .append(block.getType().toString().toLowerCase())
+                                                      .append(" at ")
+                                                      .append(Util.formatCoords(block.getLocation()))
+                                                      .toString());
             } else {
-                block.setType(Material.LAVA);
-            }
-
-            String type = block.getType().toString().toLowerCase();
-            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
-            player.sendMessage(String.format("%sFlowed %s block at %d,%d,%d.", ChatColor.DARK_AQUA, type, block.getX(), block.getY(), block.getZ()));
-            plugin.getLogger().info(String.format("%s flowed %s block at %d,%d,%d.",
-                                                  player.getName(), type, block.getX(), block.getY(), block.getZ()));
-        }
-
-    }
-
-    private boolean isPlayerFlowPermitted(Player player, Block block) {
-        if (plugin.getWG() == null) {
-            return false;
-        }
-        RegionManager regions = plugin.getWG().getRegionManager(block.getWorld());
-        LocalPlayer wgPlayer = plugin.getWG().wrapPlayer(player);
-        if (regions != null) {
-            ApplicableRegionSet applicable = regions.getApplicableRegions(block.getLocation());
-            if (PLAYERFLOW_OWNER_MODE) {
-                return applicable.isOwnerOfAll(wgPlayer) && applicable.size() > 0;
-            } else {
-                return applicable.isMemberOfAll(wgPlayer) && applicable.size() > 0;
+                player.sendMessage(new StringBuilder().append(ChatColor.RED)
+                                                      .append("You can only flow liquids in regions you ")
+                                                      .append(CONFIG.PLAYER_SELF_FLOW_MODE == PlayerFlowMode.OWNER ? "own" : "are a member of")
+                                                      .append("!")
+                                                      .toString());
             }
         }
-        return false;
-    }
-}
+    } // handlePlayerFlow
+
+} // SafeBucketsListener

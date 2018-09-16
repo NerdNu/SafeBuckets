@@ -4,13 +4,14 @@ version: ${project.version}
 description: ${project.description}
 website: ${project.url}
 database: true
-authors: [Travis Watkins, Ed Kellett, Stephen McGregor, totemo, redwall_hp]
+authors: [Travis Watkins, Ed Kellett, Stephen McGregor, totemo, redwall_hp, bermudalocket]
+depend: [BlockStore]
 softdepend: [WorldEdit, WorldGuard]
+api-version: 1.13
+
 permissions:
   safebuckets.playerflow:
     description: Permission to use the /flow command.
-  safebuckets.tools.block:
-    description: Permission to use the SafeBuckets inspector tool block.
   safebuckets.tools.item:
     description: Permission to use the SafeBuckets inspector tool item.
   safebuckets.tools.unsafe:
@@ -21,8 +22,7 @@ permissions:
     description: Permission to use `/sb flowsel`.
   safebuckets.reload:
     description: Permission to use `/sb reload`.
-  safebuckets.debug:
-    description: Players with this permission receive debug messages.
+
 commands:
   sb:
     description: SafeBuckets moderator command.
@@ -30,7 +30,7 @@ commands:
     
       §e/<command> reload§f - Reload the SafeBuckets configuration.
       §e/<command> §eflowsel§f - Flow all safe liquid blocks in the current WorldEdit selection.
-      §e/<command> §f[§esafe§f|§eunsafe§f [§ewater§f|§elava§f]] - Convert the player's empty hotbar slot or some kind of bucket (empty, water or lava) into a bucket with the specified safety and liquid type. If the arguments do not specify safety, turn an empty slot or empty bucket into an unsafe water bucket, or invert the safety of a bucket that contains water or lava. If the slot is not empty or a valid bucket, do not give the player any item. If the liquid is not specified, it defaults to water.
+      §e/<command> §f[§etype§f [§esafe§f|§eunsafe§f]] - Convert the player's empty hotbar slot or some kind of bucket into a bucket with the specified safety and liquid type. If the arguments do not specify safety, turn an empty slot or bucket into an unsafe water bucket, or invert the safety of another held bucket. If the slot is not empty or a valid bucket, an attempt will be made to convert the held item, but upon failure will not give the player any item. If the liquid is not specified, it defaults to water.
     
   flow:
     description: Toggle "flow mode" on or off.
