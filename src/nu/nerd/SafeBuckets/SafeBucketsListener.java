@@ -1,10 +1,19 @@
 package nu.nerd.SafeBuckets;
 
+import com.sk89q.worldedit.Vector;
+import com.sk89q.worldedit.WorldEdit;
+import com.sk89q.worldedit.WorldEditException;
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldedit.event.extent.EditSessionEvent;
+import com.sk89q.worldedit.extent.AbstractDelegateExtent;
+import com.sk89q.worldedit.util.eventbus.Subscribe;
+import com.sk89q.worldedit.world.block.BlockStateHolder;
 import me.sothatsit.usefulsnippets.EnchantGlow;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -38,6 +47,7 @@ public class SafeBucketsListener implements Listener {
      */
     SafeBucketsListener() {
         Bukkit.getPluginManager().registerEvents(this, SafeBuckets.PLUGIN);
+        WorldEdit.getInstance().getEventBus().register(this);
     }
 
     // ------------------------------------------------------------------------------------------------------
@@ -85,27 +95,27 @@ public class SafeBucketsListener implements Listener {
         }
     }
 
-    /*
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    // ------------------------------------------------------------------------------------------------------
+    /**
+     * Prevents WorldEdited liquids from flowing.
+     */
+    @Subscribe
     public void onWorldEdit(EditSessionEvent event) {
-        System.out.println("edit session");
         event.setExtent(new AbstractDelegateExtent(event.getExtent()) {
             @Override
-            public boolean setBlock(Vector location, BlockStateHolder block) throws WorldEditException {
-                System.out.println("caught");
+            public boolean setBlock(Vector loc, BlockStateHolder block) throws WorldEditException {
                 Material newMaterial = BukkitAdapter.adapt(block.getBlockType());
                 if (Liquid.isSupportedType(newMaterial) && event.getWorld() != null) {
                     World world = BukkitAdapter.adapt(event.getWorld());
                     Bukkit.getScheduler().runTaskLater(SafeBuckets.PLUGIN, () -> {
-                        Block newBlock = world.getBlockAt(location.getBlockX(), location.getBlockY(), location.getBlockZ());
+                        Block newBlock = world.getBlockAt(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
                         SafeBuckets.setSafe(newBlock, true);
-                        System.out.println("Set safe after WE: " + newBlock);
                     }, 1);
                 }
-                return super.setBlock(location, block);
+                return super.setBlock(loc, block);
             }
         });
-    }*/
+    }
 
     // ------------------------------------------------------------------------------------------------------
     /**
@@ -129,7 +139,8 @@ public class SafeBucketsListener implements Listener {
         Block block = event.getBlock();
         FrozenLiquid frozenLiquid = FrozenLiquid.getType(block);
         if (frozenLiquid != null && frozenLiquid.meltsWhenBroken()) {
-            if (!event.getPlayer().getEquipment().getItemInMainHand().containsEnchantment(Enchantment.SILK_TOUCH)) {
+            Player player = event.getPlayer();
+            if (!player.getEquipment().getItemInMainHand().containsEnchantment(Enchantment.SILK_TOUCH)) {
                 // make the ice block safe to prevent flowing immediately upon breaking
                 SafeBuckets.setSafe(block, true);
 
@@ -183,9 +194,9 @@ public class SafeBucketsListener implements Listener {
 
                     // replenish
                     final ItemStack bucket = liquid.getBucket(false);
-                    Bukkit.getScheduler().runTaskLater(SafeBuckets.PLUGIN,
-                                                       () -> player.getEquipment().setItemInMainHand(bucket),
-                                                       1);
+                    Bukkit.getScheduler().runTaskLater(SafeBuckets.PLUGIN, () -> {
+                        player.getEquipment().setItemInMainHand(bucket);
+                    }, 1);
                 } else {
                     SafeBuckets.setSafe(block, true);
                 }

@@ -382,7 +382,8 @@ public class SafeBuckets extends JavaPlugin {
             return;
         }
 
-        if (CONFIG.WORLDEDIT_FLOWSEL_MAX_BLOCKS != 0 && region.getArea() > CONFIG.WORLDEDIT_FLOWSEL_MAX_BLOCKS) {
+        int regionArea = region.getArea();
+        if (CONFIG.WORLDEDIT_FLOWSEL_MAX_BLOCKS != 0 && regionArea > CONFIG.WORLDEDIT_FLOWSEL_MAX_BLOCKS) {
             Util.Message.WORLDEDIT_FLOWSEL_OVER_MAX.send(player);
             return;
         }

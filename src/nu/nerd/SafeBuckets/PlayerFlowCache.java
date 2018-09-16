@@ -32,7 +32,7 @@ class PlayerFlowCache implements Listener {
         Bukkit.getPluginManager().registerEvents(this, SafeBuckets.PLUGIN);
         Bukkit.getScheduler().runTaskTimer(SafeBuckets.PLUGIN,
                                            PlayerFlowCache::reviewCache,
-                                           1,
+                                           1, // delay
                                            SafeBuckets.CONFIG.PLAYER_SELF_FLOW_CACHE_REVIEW_PERIOD);
     }
 
@@ -102,7 +102,7 @@ class PlayerFlowCache implements Listener {
     /**
      * Forces a player's flow session to expire upon logout.
      */
-    @EventHandler(priority = EventPriority.NORMAL)
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerQuit(PlayerQuitEvent event) {
         forceExpire(event.getPlayer());
     }
@@ -111,7 +111,7 @@ class PlayerFlowCache implements Listener {
     /**
      * Forces a player's flow session to expire upon being kicked.
      */
-    @EventHandler(priority = EventPriority.NORMAL)
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerKick(PlayerKickEvent event) {
         forceExpire(event.getPlayer());
     }
