@@ -6,10 +6,6 @@ import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.Arrays;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 // ----------------------------------------------------------------------------------------------------------
 /**
  * Represents a static collection of Liquids. Accessible information includes the liquid's simple name (a
@@ -181,27 +177,6 @@ public enum Liquid {
      */
     public static boolean isSupportedType(Block block) {
         return isSupportedType(block.getType());
-    }
-
-    // ------------------------------------------------------------------------------------------------------
-    /**
-     * Returns a string of all supported Liquids. Returns simple names for readability.
-     *
-     * @return a string of all supported Liquids.
-     */
-    public static String getSupportedTypes() {
-        return stream().map(Liquid::getSimpleName)
-                       .collect(Collectors.joining(", "));
-    }
-
-    // ------------------------------------------------------------------------------------------------------
-    /**
-     * Returns a sequential stream with this enum's values as its source.
-     *
-     * @return a sequential stream with this enum's values as its source.
-     */
-    public static Stream<Liquid> stream() {
-        return Arrays.stream(values());
     }
 
 }

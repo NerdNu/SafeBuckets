@@ -246,28 +246,16 @@ public class SafeBucketsListener implements Listener {
      */
     private void useTool(PlayerInteractEvent event, Block block) {
         event.setCancelled(true);
-
+        Player player = event.getPlayer();
         boolean isSafe = SafeBuckets.isSafe(block);
         boolean isToggle = event.getAction() == Action.LEFT_CLICK_BLOCK;
         if (isToggle) {
             isSafe = !isSafe;
             SafeBuckets.setSafe(block, isSafe);
+            player.sendMessage(ChatColor.DARK_AQUA + "SafeBuckets toggle: " + Util.formatCoords(block.getLocation()) + " is now " + ChatColor.YELLOW + (isSafe ? "safe" : "unsafe"));
+        } else {
+            player.sendMessage(ChatColor.DARK_AQUA + "SafeBuckets query: " + Util.formatCoords(block.getLocation()) + " is " + ChatColor.YELLOW + (isSafe ? "safe" : "unsafe"));
         }
-
-        String msg = new StringBuilder().append(ChatColor.DARK_AQUA)
-                                        .append("SafeBuckets ")
-                                        .append(isToggle ? "toggle" : "query")
-                                        .append(": ")
-                                        .append(Util.formatCoords(block.getLocation()))
-                                        .append(" is ")
-                                        .append(isToggle ? "now " : " ")
-                                        .append(ChatColor.YELLOW)
-                                        .append(isSafe ? "safe" : "unsafe")
-                                        .append(ChatColor.DARK_AQUA)
-                                        .append(".")
-                                        .toString();
-
-        event.getPlayer().sendMessage(msg);
     }
 
     // ------------------------------------------------------------------------------------------------------
@@ -297,20 +285,12 @@ public class SafeBucketsListener implements Listener {
             if (SafeBuckets.isPlayerFlowPermitted(player, block)) {
                 SafeBuckets.setSafe(block, false);
                 player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
-                player.sendMessage(new StringBuilder().append(ChatColor.DARK_AQUA)
-                                                      .append("Flowed ")
-                                                      .append(block.getType().toString().toLowerCase())
-                                                      .append(" at ")
-                                                      .append(Util.formatCoords(block.getLocation()))
-                                                      .toString());
+                player.sendMessage(ChatColor.DARK_AQUA + "Flowed " + block.getType().toString() + " at " + Util.formatCoords(block.getLocation()));
             } else {
-                player.sendMessage(new StringBuilder().append(ChatColor.RED)
-                                                      .append("You can only flow liquids in regions you ")
-                                                      .append(CONFIG.PLAYER_SELF_FLOW_MODE == PlayerFlowMode.OWNER ? "own" : "are a member of")
-                                                      .append("!")
-                                                      .toString());
+                player.sendMessage(ChatColor.RED + "You can only flow liquids in regions you " + (CONFIG.PLAYER_SELF_FLOW_MODE == PlayerFlowMode.OWNER ? "own" : "are a member of") + "!");
             }
         }
+
     } // handlePlayerFlow
 
 } // SafeBucketsListener

@@ -330,8 +330,7 @@ public class SafeBuckets extends JavaPlugin {
      * @return true if the player can flow the given block.
      */
     static boolean isPlayerFlowPermitted(Player player, Block block) {
-
-        if (!SafeBuckets.PLUGIN.hasWorldGuard()) {
+        if (!PLUGIN.hasWorldGuard()) {
             return false;
         }
 
@@ -403,13 +402,7 @@ public class SafeBuckets extends JavaPlugin {
             }
         }
 
-        player.sendMessage(new StringBuilder().append(ChatColor.LIGHT_PURPLE)
-                                              .append("Flowed ")
-                                              .append(blocksAffected)
-                                              .append(" blocks around ")
-                                              .append(Util.formatCoords(player.getLocation()))
-                                              .append(".")
-                                              .toString());
+        player.sendMessage(ChatColor.LIGHT_PURPLE + "Flowed " + blocksAffected + " blocks around " + Util.formatCoords(player.getLocation()) + ".");
     }
 
     // ------------------------------------------------------------------------------------------------------
