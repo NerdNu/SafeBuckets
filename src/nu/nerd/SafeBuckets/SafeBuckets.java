@@ -166,9 +166,9 @@ public class SafeBuckets extends JavaPlugin {
         if (args.length == 1 && args[0].equalsIgnoreCase("reload")) {
             if (sender.hasPermission("safebuckets.reload")) {
                 CONFIG.reload();
-                Util.Message.CONFIG_RELOADED.send(sender);
+                sender.sendMessage(ChatColor.DARK_AQUA + "Configuration reloaded.");
             } else {
-                Util.Message.NO_PERMISSION.send(sender);
+                sender.sendMessage(ChatColor.RED + "You don't have permission to do that!");
             }
             return true;
         }
@@ -177,19 +177,19 @@ public class SafeBuckets extends JavaPlugin {
         if (args.length == 1 && args[0].equalsIgnoreCase("flowsel")) {
 
             if (!sender.hasPermission("safebuckets.flowsel")) {
-                Util.Message.NO_PERMISSION.send(sender);
+                sender.sendMessage(ChatColor.RED + "You don't have permission to do that!");
                 return true;
             }
 
             if (!hasWorldEdit() || !CONFIG.WORLDEDIT_FLOWSEL_ENABLED) {
-                Util.Message.FEATURE_NOT_ENABLED.send(sender);
+                sender.sendMessage(ChatColor.RED + "That feature is not enabled.");
                 return true;
             }
 
             if (sender instanceof Player) {
                 flowLiquidsInSelection((Player) sender);
             } else {
-                Util.Message.PLAYERFLOW_NOT_IN_GAME.send(sender);
+                sender.sendMessage(ChatColor.RED + "You must be in-game to flow liquids!");
             }
             return true;
         }
@@ -198,7 +198,7 @@ public class SafeBuckets extends JavaPlugin {
         if (args.length <= 2) {
 
             if (!sender.hasPermission("safebuckets.tools.unsafe")) {
-                Util.Message.NO_PERMISSION.send(sender);
+                sender.sendMessage(ChatColor.RED + "You don't have permission to do that!");
                 return true;
             }
 
@@ -227,7 +227,7 @@ public class SafeBuckets extends JavaPlugin {
                                     }
                                     newBucket = tryLiquid.getBucket(safe);
                                 } else {
-                                    Util.Message.SUPPORTED_LIQUIDS.send(sender);
+                                    sender.sendMessage("Supported liquids: WATER, LAVA");
                                 }
                             }
                         }
@@ -237,7 +237,7 @@ public class SafeBuckets extends JavaPlugin {
                     }
                 }
             } else {
-                Util.Message.PLAYERFLOW_NOT_IN_GAME.send(sender);
+                sender.sendMessage(ChatColor.RED + "You must be in-game to flow liquids!");
             }
         }
         return true;
@@ -253,12 +253,12 @@ public class SafeBuckets extends JavaPlugin {
     private boolean playerFlowCommand(CommandSender sender) {
 
         if (!sender.hasPermission("safebuckets.playerflow")) {
-            Util.Message.NO_PERMISSION.send(sender);
+            sender.sendMessage(ChatColor.RED + "You don't have permission to do that!");
             return true;
         }
 
         if (!hasWorldGuard() || !CONFIG.PLAYER_SELF_FLOW) {
-            Util.Message.FEATURE_NOT_ENABLED.send(sender);
+            sender.sendMessage(ChatColor.RED + "That feature is not enabled.");
             return true;
         }
 
@@ -270,7 +270,7 @@ public class SafeBuckets extends JavaPlugin {
                 PlayerFlowCache.forceExpire(player);
             }
         } else {
-            Util.Message.PLAYERFLOW_NOT_IN_GAME.send(sender);
+            sender.sendMessage(ChatColor.RED + "You must be in-game to flow liquids!");
         }
 
         return true;
@@ -365,7 +365,7 @@ public class SafeBuckets extends JavaPlugin {
         int blocksAffected = 0;
 
         if (getWorldEdit() == null) {
-            Util.Message.WORLDEDIT_MISSING.send(player);
+            player.sendMessage(ChatColor.RED + "WorldEdit must be installed to do that!");
             return;
         }
 
@@ -378,13 +378,13 @@ public class SafeBuckets extends JavaPlugin {
                 throw new IncompleteRegionException();
             }
         } catch (IncompleteRegionException e) {
-            Util.Message.WORLDEDIT_SELECT_REGION.send(player);
+            player.sendMessage(ChatColor.RED + "You must select a region first!");
             return;
         }
 
         int regionArea = region.getArea();
         if (CONFIG.WORLDEDIT_FLOWSEL_MAX_BLOCKS != 0 && regionArea > CONFIG.WORLDEDIT_FLOWSEL_MAX_BLOCKS) {
-            Util.Message.WORLDEDIT_FLOWSEL_OVER_MAX.send(player);
+            player.sendMessage(ChatColor.RED + "Your selection must be under " + SafeBuckets.CONFIG.WORLDEDIT_FLOWSEL_MAX_BLOCKS + " blocks!");
             return;
         }
 

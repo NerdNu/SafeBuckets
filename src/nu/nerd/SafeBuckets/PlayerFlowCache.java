@@ -1,6 +1,7 @@
 package nu.nerd.SafeBuckets;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -45,7 +46,7 @@ class PlayerFlowCache implements Listener {
     static void cache(Player player) {
         SafeBuckets.log("Added to cache: " + player.getName());
         _activePlayers.put(player.getUniqueId(), System.currentTimeMillis());
-        Util.Message.PLAYERFLOW_ON.send(player);
+        player.sendMessage(ChatColor.DARK_AQUA + "Flow mode is " + ChatColor.YELLOW + "on");
     }
 
     // ------------------------------------------------------------------------------------------------------
@@ -68,7 +69,7 @@ class PlayerFlowCache implements Listener {
     static void forceExpire(Player player) {
         SafeBuckets.log("Forcing cache to expire for: " + player.getName());
         _activePlayers.remove(player.getUniqueId());
-        Util.Message.PLAYERFLOW_OFF.send(player);
+        player.sendMessage(ChatColor.DARK_AQUA + "Flow mode is " + ChatColor.YELLOW + "off");
     }
 
     // ------------------------------------------------------------------------------------------------------
@@ -91,7 +92,7 @@ class PlayerFlowCache implements Listener {
         long expirationTimestamp = _activePlayers.get(uuid) + SafeBuckets.CONFIG.PLAYER_SELF_FLOW_DURATION;
         if (expirationTimestamp - System.currentTimeMillis() < 0) {
             Player player = Bukkit.getServer().getPlayer(uuid);
-            Util.Message.PLAYERFLOW_OFF.send(player);
+            player.sendMessage(ChatColor.DARK_AQUA + "Flow mode is " + ChatColor.YELLOW + "off");
             return true;
         } else {
             return false;
