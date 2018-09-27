@@ -1,5 +1,20 @@
 #####################################
 # +-------------------------------+ #
+# |           LIQUIDS             | #
+# +-------------------------------+ #
+#####################################
+# Material names of all liquids to be handled.
+liquids:
+  - WATER
+  - LAVA
+
+# Material names of all ice blocks that can melt.
+meltable-ice:
+  - ICE
+  - FROSTED_ICE
+
+#####################################
+# +-------------------------------+ #
 # |            TOOLS              | #
 # +-------------------------------+ #
 #####################################
@@ -26,6 +41,16 @@ physics:
 # +-------------------------------+ #
 #####################################
 buckets:
+
+  # A list of buckets capable of placing liquid in
+  # the world.
+  list:
+    - WATER_BUCKET
+    - COD_BUCKET
+    - PUFFERFISH_BUCKET
+    - SALMON_BUCKET
+    - TROPICAL_FISH_BUCKET
+    - LAVA_BUCKET
 
   # Defines if buckets are usable. If false, liquids
   # will not be placeable using buckets.

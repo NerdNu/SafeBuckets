@@ -18,10 +18,12 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.Waterlogged;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -102,10 +104,8 @@ public class SafeBuckets extends JavaPlugin {
         if (state) {
             CACHE.add(block.getLocation());
         } else {
-            if (Liquid.isSupportedType(block)) {
-                Util.forceBlockUpdate(block); // flow
-            }
             CACHE.remove(block.getLocation());
+            Util.forceBlockUpdate(block);
         }
         BlockStoreApi.setBlockMeta(block, PLUGIN, METADATA_KEY, state);
     }
@@ -124,18 +124,24 @@ public class SafeBuckets extends JavaPlugin {
 
     // ------------------------------------------------------------------------------------------------------
     /**
+     * Determines if a block is eligible to be flowed, e.g. a waterlogged block or a liquid block.
+     *
+     * @param block the block.
+     * @return true if the block is eligible to be flowed.
+     */
+    static boolean canBeFlowed(Block block) {
+        return Configuration.LIQUID_BLOCKS.contains(block.getType()) || block.getBlockData() instanceof Waterlogged;
+    }
+
+    // ------------------------------------------------------------------------------------------------------
+    /**
      * Determines if a given ItemStack matches an unsafe bucket.
      *
      * @param item the ItemStack.
      * @return true if the given ItemStack matches an unsafe bucket.
      */
     private boolean isUnsafeBucket(ItemStack item) {
-        Liquid liquid = Liquid.getType(item);
-        if (liquid != null) {
-            ItemStack unsafeBucket = liquid.getBucket(false);
-            return item.isSimilar(unsafeBucket);
-        }
-        return false;
+        return Configuration.BUCKETS.contains(item.getType()) && EnchantGlow.hasGlow(item);
     }
 
     // ------------------------------------------------------------------------------------------------------
@@ -202,45 +208,92 @@ public class SafeBuckets extends JavaPlugin {
                 return true;
             }
 
-            if (sender instanceof Player) {
-                Player player = (Player) sender;
-                ItemStack itemInHand = player.getEquipment().getItemInMainHand();
-                if (itemInHand != null) {
-                    Liquid liquid = Liquid.getType(itemInHand);
-                    ItemStack newBucket = null;
-                    if (liquid != null) {
-                        // filled bucket
-                        newBucket = liquid.getBucket(isUnsafeBucket(itemInHand));
-                    } else {
-                        // something else
-                        if (itemInHand.getType() == Material.AIR) {
-                            // empty hand
-                            if (args.length >= 1) {
-                                String inputType = args[0];
-                                Liquid tryLiquid = Liquid.getType(inputType);
-                                if (tryLiquid != null) {
-                                    boolean safe;
-                                    if (args.length == 2) { // are they specifying safe or unsafe?
-                                        safe = args[1].equalsIgnoreCase("safe");
-                                    } else { // if not, default to unsafe
-                                        safe = false;
-                                    }
-                                    newBucket = tryLiquid.getBucket(safe);
-                                } else {
-                                    sender.sendMessage("Supported liquids: WATER, LAVA");
-                                }
-                            }
-                        }
-                    }
-                    if (newBucket != null) {
-                        player.getInventory().setItemInMainHand(newBucket);
+            if (!(sender instanceof Player)) {
+                sender.sendMessage(ChatColor.RED + "You must be in-game to flow liquids!");
+                return true;
+            }
+
+            Player player = (Player) sender;
+            ItemStack itemInHand = player.getEquipment().getItemInMainHand();
+
+            boolean safe = false;
+            Material liquidContainer = Material.WATER_BUCKET;
+
+            if (itemInHand != null &&
+                itemInHand.getType() != Material.AIR &&
+                itemInHand.getType() != Material.BUCKET &&
+                itemInHand.getType() != Material.WATER_BUCKET &&
+                itemInHand.getType() != Material.LAVA_BUCKET) {
+                sender.sendMessage(ChatColor.RED +
+                                   "[SafeBuckets] Your main hand must be empty, or holding an empty bucket, water bucket or lava bucket.");
+                return true;
+            }
+
+            if (itemInHand.getType() == Material.WATER_BUCKET || itemInHand.getType() == Material.LAVA_BUCKET) {
+                safe = isUnsafeBucket(itemInHand);
+                liquidContainer = itemInHand.getType();
+            }
+
+            if (args.length >= 1) {
+                if (args[0].equalsIgnoreCase("safe")) {
+                    safe = true;
+                } else if (args[0].equalsIgnoreCase("unsafe")) {
+                    safe = false;
+                } else {
+                    sender.sendMessage(ChatColor.RED + "[SafeBuckets] Valid conditions are safe and unsafe");
+                    return true;
+                }
+
+                if (args.length == 2) {
+                    if (args[1].equalsIgnoreCase("water"))
+                        liquidContainer = Material.WATER_BUCKET;
+                    else if (args[1].equalsIgnoreCase("lava"))
+                        liquidContainer = Material.LAVA_BUCKET;
+                    else {
+                        sender.sendMessage(ChatColor.RED + "[SafeBuckets] Valid liquids are water and lava");
+                        return true;
                     }
                 }
-            } else {
-                sender.sendMessage(ChatColor.RED + "You must be in-game to flow liquids!");
             }
+
+            ItemStack newItem = safe ? getSafeBucket(liquidContainer) : getUnSafeBucket(liquidContainer);
+            player.getInventory().setItemInMainHand(newItem);
         }
+
         return true;
+    }
+
+    // ------------------------------------------------------------------------------------------------------
+    /**
+     * Returns an ItemStack corresponding to a safe version of the given bucket.
+     *
+     * @param liquidContainer the bucket.
+     * @return a safe bucket as an ItemStack.
+     */
+    private ItemStack getSafeBucket(Material liquidContainer) {
+        return new ItemStack(liquidContainer);
+    }
+
+    // ------------------------------------------------------------------------------------------------------
+    /**
+     * Returns an ItemStack corresponding to an unsafe version of the given bucket.
+     *
+     * @param liquidContainer the bucket.
+     * @return an unsafe bucket as an ItemStack.
+     */
+    private static ItemStack getUnSafeBucket(Material liquidContainer) {
+        ItemStack unsafeBucket = new ItemStack(liquidContainer);
+        String liquidName = "Water";
+        if (liquidContainer.equals(Material.LAVA_BUCKET)) {
+            liquidName = "Lava";
+        }
+
+        ItemMeta meta = unsafeBucket.getItemMeta();
+        meta.setDisplayName("Unsafe " + liquidName + " Bucket");
+        unsafeBucket.setItemMeta(meta);
+        EnchantGlow.addGlow(unsafeBucket);
+
+        return unsafeBucket;
     }
 
     // ------------------------------------------------------------------------------------------------------
@@ -394,7 +447,7 @@ public class SafeBuckets extends JavaPlugin {
             for (int y = min.getBlockY(); y <= max.getBlockY(); y++) {
                 for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
                     Block block = world.getBlockAt(x, y, z);
-                    if (Liquid.isSupportedType(block.getType())) {
+                    if (canBeFlowed(block)) {
                         setSafe(block, false);
                         blocksAffected++;
                     }
