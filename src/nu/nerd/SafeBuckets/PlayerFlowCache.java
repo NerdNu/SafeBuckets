@@ -13,19 +13,19 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.HashMap;
 import java.util.UUID;
 
-// ----------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------
 /**
  * A singleton cache of players currently in flow mode.
  */
 class PlayerFlowCache implements Listener {
 
-    // ------------------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     /**
      * The cache of players currently in flow mode.
      */
     private static final HashMap<UUID, Long> _activePlayers = new HashMap<>();
 
-    // ------------------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     /**
      * Constructor, called once during {@link JavaPlugin#onEnable()}.
      */
@@ -34,10 +34,10 @@ class PlayerFlowCache implements Listener {
         Bukkit.getScheduler().runTaskTimer(SafeBuckets.PLUGIN,
                                            PlayerFlowCache::reviewCache,
                                            1, // delay
-                                           SafeBuckets.CONFIG.PLAYER_SELF_FLOW_CACHE_REVIEW_PERIOD);
+                                           Configuration.PLAYER_SELF_FLOW_CACHE_REVIEW_PERIOD);
     }
 
-    // ------------------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     /**
      * Adds a player to the cache.
      *
@@ -49,7 +49,7 @@ class PlayerFlowCache implements Listener {
         player.sendMessage(ChatColor.DARK_AQUA + "Flow mode is " + ChatColor.YELLOW + "on");
     }
 
-    // ------------------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     /**
      * Returns true if the given player is cached (is in flow mode).
      *
@@ -60,7 +60,7 @@ class PlayerFlowCache implements Listener {
         return _activePlayers.containsKey(player.getUniqueId());
     }
 
-    // ------------------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     /**
      * Forces a player's flow session to expire, removing them from the cache and flow mode.
      *
@@ -72,16 +72,15 @@ class PlayerFlowCache implements Listener {
         player.sendMessage(ChatColor.DARK_AQUA + "Flow mode is " + ChatColor.YELLOW + "off");
     }
 
-    // ------------------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     /**
      * Reviews the cache to determine if any players' flow sessions have expired.
      */
     private static void reviewCache() {
-        SafeBuckets.log("Reviewing cache: " + _activePlayers.keySet().toString());
         _activePlayers.keySet().removeIf(PlayerFlowCache::willExpire);
     }
 
-    // ------------------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     /**
      * Returns true if the given player's flow session should expire.
      *
@@ -89,7 +88,7 @@ class PlayerFlowCache implements Listener {
      * @return true if the given player's flow session should expire.
      */
     private static boolean willExpire(UUID uuid) {
-        long expirationTimestamp = _activePlayers.get(uuid) + SafeBuckets.CONFIG.PLAYER_SELF_FLOW_DURATION;
+        long expirationTimestamp = _activePlayers.get(uuid) + Configuration.PLAYER_SELF_FLOW_DURATION;
         if (expirationTimestamp - System.currentTimeMillis() < 0) {
             Player player = Bukkit.getServer().getPlayer(uuid);
             player.sendMessage(ChatColor.DARK_AQUA + "Flow mode is " + ChatColor.YELLOW + "off");
@@ -99,7 +98,7 @@ class PlayerFlowCache implements Listener {
         }
     }
 
-    // ------------------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     /**
      * Forces a player's flow session to expire upon logout.
      */
@@ -108,7 +107,7 @@ class PlayerFlowCache implements Listener {
         forceExpire(event.getPlayer());
     }
 
-    // ------------------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     /**
      * Forces a player's flow session to expire upon being kicked.
      */

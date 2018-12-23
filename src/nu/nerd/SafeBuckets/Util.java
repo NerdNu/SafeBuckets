@@ -3,31 +3,34 @@ package nu.nerd.SafeBuckets;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.data.BlockData;
-import org.bukkit.block.data.Waterlogged;
-import org.bukkit.event.player.PlayerBucketEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.block.BlockState;
+import org.bukkit.entity.Player;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-// ----------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------
 /**
  * Utilities class.
  */
 class Util {
 
-    // ------------------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     /**
      * The number of ticks per second on a Minecraft server.
      */
     static final int TPS = 20;
 
-    // ------------------------------------------------------------------------------------------------------
+    static void playFlowSound(Player player) {
+        player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+    }
+
+    // ------------------------------------------------------------------------
     /**
      * Formats a given location into a human-readable ordered triple.
      *
@@ -40,9 +43,11 @@ class Util {
                                                  location.getBlockZ());
     }
 
-    // ------------------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     /**
-     * Forces a block update on a given block.
+     * Forces a block update on a given block. Necessary since, for some reason,
+     * the BlockState#update method with applyPhysics=true does not allow
+     * waterlogged blocks to flow the same way regular water/lava blocks do.
      *
      * @param block the block.
      */
@@ -54,55 +59,15 @@ class Util {
         Block adjacentBlock;
         if (!adjacentAirBlocks.isEmpty()) {
             adjacentBlock = adjacentAirBlocks.stream().findAny().get();
-            BlockData blockData = adjacentBlock.getBlockData();
-            adjacentBlock.setType(Material.BARRIER);
-            Bukkit.getScheduler().runTaskLater(SafeBuckets.PLUGIN, () -> adjacentBlock.setBlockData(blockData), 1);
         } else {
-            // really should never happen since a block needs at least one adjacent air block in order
-            // to be clicked
             adjacentBlock = block.getRelative(BlockFace.NORTH);
-            BlockData blockData = adjacentBlock.getBlockData(); // save block information
-            adjacentBlock.setType(Material.BARRIER);
-            adjacentBlock.getState().update();
-            adjacentBlock.setBlockData(blockData);
         }
+        BlockState currentState = adjacentBlock.getState();
+        adjacentBlock.setType(Material.VOID_AIR);
+        Bukkit.getScheduler().runTaskLater(SafeBuckets.PLUGIN, () -> currentState.update(true, true), 1);
     }
 
-    // ------------------------------------------------------------------------------------------------------
-    /**
-     * Returns the more relevant block in a PlayerBucketEvent. A waterloggable block is always more relevant
-     * than the relative block.
-     *
-     * @param event the PlayerBucketEvent.
-     * @return the more relevant block.
-     */
-    static Block getRelevantBlock(PlayerBucketEvent event) {
-        Block clickedBlock = event.getBlockClicked();
-        if (clickedBlock.getBlockData() instanceof Waterlogged) {
-            return clickedBlock;
-        } else {
-            return clickedBlock.getRelative(event.getBlockFace());
-        }
-    }
-
-    // ------------------------------------------------------------------------------------------------------
-    /**
-     * Returns the more relevant block in a PlayerInteractEvent. A waterloggable block is always more relevant
-     * than the relative block.
-     *
-     * @param event the PlayerInteractEvent.
-     * @return the more relevant block.
-     */
-    static Block getRelevantBlock(PlayerInteractEvent event) {
-        Block clickedBlock = event.getClickedBlock();
-        if (clickedBlock.getBlockData() instanceof Waterlogged) {
-            return clickedBlock;
-        } else {
-            return clickedBlock.getRelative(event.getBlockFace());
-        }
-    }
-
-    // ------------------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     /**
      * A set of BlockFaces directly adjacent to an abstract block.
      */
