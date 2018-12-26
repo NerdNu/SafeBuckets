@@ -2,7 +2,6 @@ package nu.nerd.SafeBuckets;
 
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -17,11 +16,9 @@ class Configuration {
 
     // ------------------------------------------------------------------------
     /**
-     * Constructor. Called once during {@link JavaPlugin#onEnable()}.
+     * Private constructor prevents reinstantiation.
      */
-    Configuration() {
-        reload();
-    }
+    private Configuration() { }
 
     // ------------------------------------------------------------------------
     /**
@@ -71,13 +68,13 @@ class Configuration {
      * {@link FileConfiguration#getString(String)}.
      *
      * @param key the YAML key.
-     * @param def the default value.
+     * @param defaultMaterial the default value.
      * @return the value.
      */
-    private static Material getMaterial(String key, Material def) {
+    private static Material getMaterial(String key, Material defaultMaterial) {
         String materialName = _config.getString(key);
         Material material = Material.getMaterial(materialName);
-        return material != null ? material : def;
+        return material != null ? material : defaultMaterial;
     }
 
     // ------------------------------------------------------------------------

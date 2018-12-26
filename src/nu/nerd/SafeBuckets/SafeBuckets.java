@@ -15,13 +15,10 @@ import me.sothatsit.usefulsnippets.EnchantGlow;
 import net.sothatsit.blockstore.BlockStoreApi;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.block.data.Waterlogged;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -29,9 +26,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.util.Vector;
 
-import java.util.Arrays;
 import java.util.HashSet;
 
 // ------------------------------------------------------------------------
@@ -53,10 +48,26 @@ public class SafeBuckets extends JavaPlugin {
     @Override
     public void onEnable() {
         PLUGIN = this;
-        new Configuration();
+        Configuration.reload();
 
         new PlayerFlowCache();
         new SafeBucketsListener();
+
+        // if WorldEdit is enabled in config, try to find the plugin
+        if (Configuration.WORLDEDIT_HOOK) {
+            Plugin plugin = getServer().getPluginManager().getPlugin("WorldEdit");
+            _worldEditEnabled = plugin instanceof WorldEditPlugin;
+            if (!_worldEditEnabled) {
+                log("WorldEdit compatibility was enabled in config.yml but the WorldEdit plugin could not be found.");
+            }
+        }
+
+        // try to find WorldGuard
+        Plugin plugin = getServer().getPluginManager().getPlugin("WorldGuard");
+        _worldGuardEnabled = plugin instanceof WorldGuardPlugin;
+        if (!_worldGuardEnabled) {
+            log("The WorldGuard plugin could not be found. Player flow will be disabled.");
+        }
 
         // create glow enchantment for compatibility with ModMode item serialization
         EnchantGlow.getGlow();
@@ -106,32 +117,8 @@ public class SafeBuckets extends JavaPlugin {
             CACHE.remove(block.getLocation());
             Util.forceBlockUpdate(block);
         }
-        Bukkit.getScheduler().runTaskLaterAsynchronously(PLUGIN, () -> showParticles(block, state), 1);
+        Bukkit.getScheduler().runTaskLaterAsynchronously(PLUGIN, () -> Util.showParticles(block, state), 1);
         BlockStoreApi.setBlockMeta(block, PLUGIN, METADATA_KEY, state);
-    }
-
-    // ------------------------------------------------------------------------
-    /**
-     * Displays colored particles around the given block to visually indicate the
-     * new safety state.
-     *
-     * @param block the block.
-     * @param state the new state.
-     */
-    private static void showParticles(Block block, boolean state) {
-        Location blockCenter = block.getLocation().add(0.5, 0.5, 0.5);
-        boolean isLiquid = block.getType() == Material.WATER; // lava is liquid but not transparent
-        Particle.DustOptions color = (state) ? new Particle.DustOptions(Color.LIME, 1)
-                                             : new Particle.DustOptions(Color.RED, 1);
-        if (isLiquid) {
-            // center only
-            block.getWorld().spawnParticle(Particle.REDSTONE, blockCenter, 10, color);
-        } else {
-            // edges too
-            for (Vector offset : CORNER_VECTORS) {
-                block.getWorld().spawnParticle(Particle.REDSTONE, block.getLocation().add(offset), 5, color);
-            }
-        }
     }
 
     // ------------------------------------------------------------------------
@@ -144,18 +131,7 @@ public class SafeBuckets extends JavaPlugin {
     static void removeSafe(Block block) {
         CACHE.remove(block.getLocation());
         BlockStoreApi.removeBlockMeta(block, PLUGIN, METADATA_KEY);
-        showParticles(block, false);
-    }
-
-    // ------------------------------------------------------------------------
-    /**
-     * Determines if a block is eligible to be flowed, e.g. a waterlogged block or a liquid block.
-     *
-     * @param block the block.
-     * @return true if the block is eligible to be flowed.
-     */
-    static boolean canBeFlowed(Block block) {
-        return Configuration.LIQUID_BLOCKS.contains(block.getType()) || block.getBlockData() instanceof Waterlogged;
+        Util.showParticles(block, false);
     }
 
     // ------------------------------------------------------------------------
@@ -168,6 +144,34 @@ public class SafeBuckets extends JavaPlugin {
     private boolean isUnsafeBucket(ItemStack item) {
         return Configuration.BUCKETS.contains(item.getType()) && EnchantGlow.hasGlow(item);
     }
+
+    // ------------------------------------------------------------------------
+    /**
+     * Returns an ItemStack corresponding to the safe or unsafe version of the
+     * given material.
+     *
+     * @param liquidContainer the bucket.
+     * @param safe whether or not the bucket should be safe.
+     * @return an unsafe bucket as an ItemStack.
+     */
+    private static ItemStack getBucket(Material liquidContainer, boolean safe) {
+        ItemStack bucket = new ItemStack(liquidContainer);
+        if (safe) {
+            return bucket;
+        }
+        String liquidName = "Water";
+        if (liquidContainer.equals(Material.LAVA_BUCKET)) {
+            liquidName = "Lava";
+        }
+
+        ItemMeta meta = bucket.getItemMeta();
+        meta.setDisplayName("Unsafe " + liquidName + " Bucket");
+        bucket.setItemMeta(meta);
+        EnchantGlow.addGlow(bucket);
+
+        return bucket;
+    }
+
 
     // ------------------------------------------------------------------------
     /**
@@ -212,7 +216,7 @@ public class SafeBuckets extends JavaPlugin {
                 return true;
             }
 
-            if (!hasWorldEdit() || !Configuration.WORLDEDIT_FLOWSEL_ENABLED) {
+            if (!_worldEditEnabled || !Configuration.WORLDEDIT_FLOWSEL_ENABLED) {
                 sender.sendMessage(ChatColor.RED + "That feature is not enabled.");
                 return true;
             }
@@ -254,6 +258,11 @@ public class SafeBuckets extends JavaPlugin {
                 return true;
             }
 
+            if (itemInHand == null) {
+                sender.sendMessage(ChatColor.RED + "[SafeBuckets] Your main hand was null, but that shouldn't happen.");
+                return true;
+            }
+
             if (itemInHand.getType() == Material.WATER_BUCKET || itemInHand.getType() == Material.LAVA_BUCKET) {
                 safe = isUnsafeBucket(itemInHand);
                 liquidContainer = itemInHand.getType();
@@ -281,44 +290,11 @@ public class SafeBuckets extends JavaPlugin {
                 }
             }
 
-            ItemStack newItem = safe ? getSafeBucket(liquidContainer) : getUnSafeBucket(liquidContainer);
+            ItemStack newItem = getBucket(liquidContainer, safe);
             player.getInventory().setItemInMainHand(newItem);
         }
 
         return true;
-    }
-
-    // ------------------------------------------------------------------------
-    /**
-     * Returns an ItemStack corresponding to a safe version of the given bucket.
-     *
-     * @param liquidContainer the bucket.
-     * @return a safe bucket as an ItemStack.
-     */
-    private ItemStack getSafeBucket(Material liquidContainer) {
-        return new ItemStack(liquidContainer);
-    }
-
-    // ------------------------------------------------------------------------
-    /**
-     * Returns an ItemStack corresponding to an unsafe version of the given bucket.
-     *
-     * @param liquidContainer the bucket.
-     * @return an unsafe bucket as an ItemStack.
-     */
-    private static ItemStack getUnSafeBucket(Material liquidContainer) {
-        ItemStack unsafeBucket = new ItemStack(liquidContainer);
-        String liquidName = "Water";
-        if (liquidContainer.equals(Material.LAVA_BUCKET)) {
-            liquidName = "Lava";
-        }
-
-        ItemMeta meta = unsafeBucket.getItemMeta();
-        meta.setDisplayName("Unsafe " + liquidName + " Bucket");
-        unsafeBucket.setItemMeta(meta);
-        EnchantGlow.addGlow(unsafeBucket);
-
-        return unsafeBucket;
     }
 
     // ------------------------------------------------------------------------
@@ -335,7 +311,7 @@ public class SafeBuckets extends JavaPlugin {
             return true;
         }
 
-        if (!hasWorldGuard() || !Configuration.PLAYER_SELF_FLOW) {
+        if (!_worldGuardEnabled || !Configuration.PLAYER_SELF_FLOW) {
             sender.sendMessage(ChatColor.RED + "That feature is not enabled.");
             return true;
         }
@@ -356,51 +332,6 @@ public class SafeBuckets extends JavaPlugin {
 
     // ------------------------------------------------------------------------
     /**
-     * Returns true if WorldEdit is present.
-     *
-     * @return true if WorldEdit is present.
-     */
-    private boolean hasWorldEdit() {
-        return getWorldEdit() != null;
-    }
-
-    // ------------------------------------------------------------------------
-    /**
-     * Returns the WorldEdit plugin if present, null otherwise.
-     *
-     * @return the WorldEdit plugin if present, null otherwise.
-     */
-    private WorldEditPlugin getWorldEdit() {
-        if (!Configuration.WORLDEDIT_HOOK) {
-            return null;
-        }
-        Plugin plugin = getServer().getPluginManager().getPlugin("WorldEdit");
-        return plugin instanceof WorldEditPlugin ? (WorldEditPlugin) plugin : null;
-    }
-
-    // ------------------------------------------------------------------------
-    /**
-     * Returns true if WorldGuard is present.
-     *
-     * @return true if WorldGuard is present.
-     */
-    private boolean hasWorldGuard() {
-        return getWorldGuard() != null;
-    }
-
-    // ------------------------------------------------------------------------
-    /**
-     * Returns the WorldGuard plugin if present, null otherwise.
-     *
-     * @return the WorldGuard plugin if present, null otherwise.
-     */
-    private WorldGuardPlugin getWorldGuard() {
-        Plugin plugin = getServer().getPluginManager().getPlugin("WorldGuard");
-        return plugin instanceof WorldGuardPlugin ? (WorldGuardPlugin) plugin : null;
-    }
-
-    // ------------------------------------------------------------------------
-    /**
      * Determines if a player can flow a given block.
      *
      * @param player the player.
@@ -408,7 +339,7 @@ public class SafeBuckets extends JavaPlugin {
      * @return true if the player can flow the given block.
      */
     static boolean isPlayerFlowPermitted(Player player, Block block) {
-        if (!PLUGIN.hasWorldGuard()) {
+        if (!_worldGuardEnabled) {
             return false;
         }
 
@@ -441,12 +372,13 @@ public class SafeBuckets extends JavaPlugin {
     private void flowLiquidsInSelection(Player player) {
         int blocksAffected = 0;
 
-        if (getWorldEdit() == null) {
+        if (!_worldEditEnabled) {
             player.sendMessage(ChatColor.RED + "WorldEdit must be installed to do that!");
             return;
         }
 
-        LocalSession localSession = getWorldEdit().getSession(player);
+        WorldEditPlugin worldEdit = (WorldEditPlugin) getServer().getPluginManager().getPlugin("WorldEdit");
+        LocalSession localSession = worldEdit.getSession(player);
         com.sk89q.worldedit.world.World wrappedWorld = BukkitAdapter.adapt(player.getWorld());
         Region region;
         try {
@@ -472,7 +404,7 @@ public class SafeBuckets extends JavaPlugin {
             for (int y = min.getBlockY(); y <= max.getBlockY(); y++) {
                 for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
                     Block block = world.getBlockAt(x, y, z);
-                    if (canBeFlowed(block)) {
+                    if (block.getType() == Material.WATER || block.getType() == Material.LAVA || Util.isWaterlogged(block)) {
                         setSafe(block, false);
                         blocksAffected++;
                     }
@@ -495,22 +427,6 @@ public class SafeBuckets extends JavaPlugin {
 
     // ------------------------------------------------------------------------
     /**
-     * A set of relative vectors corresponding to the eight corners of a block.
-     */
-    private static final HashSet<Vector> CORNER_VECTORS = new HashSet<>(Arrays.asList(
-        new Vector(1,0,0),
-        new Vector(0,0,1),
-        new Vector(1,0,1),
-        new Vector(0,0,0),
-
-        new Vector(1,1,0),
-        new Vector(0,1,1),
-        new Vector(1,1,1),
-        new Vector(0,1,0)
-    ));
-
-    // ------------------------------------------------------------------------
-    /**
      * This plugin's prefix as a string; for logging.
      */
     private static final String PREFIX = ChatColor.WHITE + "[" + ChatColor.AQUA + "SafeBuckets" + ChatColor.WHITE + "] ";
@@ -526,5 +442,9 @@ public class SafeBuckets extends JavaPlugin {
      * The block safety cache.
      */
     private static final HashSet<Location> CACHE = new HashSet<>();
+
+    private static boolean _worldEditEnabled;
+
+    private static boolean _worldGuardEnabled;
 
 }
