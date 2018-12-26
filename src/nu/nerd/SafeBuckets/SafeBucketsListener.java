@@ -146,6 +146,17 @@ public class SafeBucketsListener implements Listener {
             return;
         }
 
+        // handle waterloggables
+        if (block.getBlockData() instanceof Waterlogged && ((Waterlogged)block.getBlockData()).isWaterlogged()) {
+            Location blockLoc = block.getLocation();
+            Bukkit.getScheduler().runTaskLater(SafeBuckets.PLUGIN, () -> {
+                Block blockNextTick = blockLoc.getWorld().getBlockAt(blockLoc);
+                if (blockNextTick.getType() == Material.WATER) {
+                    SafeBuckets.setSafe(blockNextTick, true);
+                }
+            }, 1);
+        }
+
         // meltable ice broken
         if (Configuration.MELTABLE_ICE.contains(blockType)) {
             if (event.getPlayer() != null) {
@@ -216,6 +227,9 @@ public class SafeBucketsListener implements Listener {
                 if (!((Waterlogged) clickedBlock.getBlockData()).isWaterlogged()) {
                     SafeBuckets.setSafe(clickedBlock, true);
                 }
+            } else if (relativeBlock.getType() == Material.SIGN || relativeBlock.getType() == Material.WALL_SIGN) {
+                //quick fix for bug where water placed on a sign flows
+                SafeBuckets.setSafe(relativeBlock, true);
             } else if (relativeBlock.getType() == Material.AIR) {
                 SafeBuckets.setSafe(relativeBlock, true);
             }

@@ -18,6 +18,7 @@ hs_err_pid*
 
 # IntelliJ stuff:
 .idea
+*.iml
 
 # Build:
 /classes/
