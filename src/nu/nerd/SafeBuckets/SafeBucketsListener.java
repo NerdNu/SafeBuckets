@@ -147,8 +147,9 @@ public class SafeBucketsListener implements Listener {
         }
 
         // handle waterloggables
-        if (block.getBlockData() instanceof Waterlogged && ((Waterlogged)block.getBlockData()).isWaterlogged()) {
+        if (Util.isWaterlogged(block)) {
             SafeBuckets.setSafe(block, true);
+            return;
         }
 
         // meltable ice broken
@@ -181,22 +182,27 @@ public class SafeBucketsListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent event) {
         if (event.getBlockReplacedState().getType() == Material.WATER || event.getBlockReplacedState().getType() == Material.LAVA) {
-            if (event.getBlockPlaced().getType() != Material.WATER && event.getBlockPlaced().getType() != Material.LAVA) {
+            if (!Util.isWaterlogged(event.getBlockPlaced()) && event.getBlockPlaced().getType() != Material.WATER && event.getBlockPlaced().getType() != Material.LAVA) {
                 SafeBuckets.removeSafe(event.getBlockPlaced());
+                return;
             }
         }
+
         if (event.getBlockPlaced().getType() == Material.DISPENSER) {
             if (!Configuration.DISPENSERS_ENABLED) {
                 event.setCancelled(true);
+                return;
             } else {
                 if (Configuration.DISPENSERS_SAFE) {
                     SafeBuckets.setSafe(event.getBlockPlaced(), true);
+                    return;
                 }
             }
         }
+
         // handle waterloggables
         Block block = event.getBlock();
-        if (block.getBlockData() instanceof Waterlogged && ((Waterlogged)block.getBlockData()).isWaterlogged()) {
+        if (Util.isWaterlogged(block)) {
             SafeBuckets.setSafe(block, true);
         }
     }
@@ -237,20 +243,18 @@ public class SafeBucketsListener implements Listener {
 
         // staff trying to flow
         // maybe the clicked block is waterlogged and needs to be flowed?
-        if (clickedBlock.getBlockData() instanceof Waterlogged && mainHand.getType() == Material.WATER_BUCKET) {
-            Waterlogged waterlogged = (Waterlogged) clickedBlock.getBlockData();
-            if (waterlogged.isWaterlogged()) {
-                // safe waterlogged block, flow
-                SafeBuckets.setSafe(clickedBlock, false);
-                Util.playFlowSound(player);
-                // stop bucket from actually placing water
-                Bukkit.getScheduler().runTaskLater(SafeBuckets.PLUGIN, () -> {
-                    if (relativeBlock.getType() == Material.WATER) {
-                        relativeBlock.setType(Material.AIR);
-                    }
-                }, 1);
-                return;
-            }
+        if (Util.isWaterlogged(clickedBlock) && mainHand.getType() == Material.WATER_BUCKET) {
+            // safe waterlogged block, flow
+            SafeBuckets.setSafe(clickedBlock, false);
+            Util.playFlowSound(player);
+            // stop bucket from actually placing water, replenish unsafe bucket
+            Bukkit.getScheduler().runTaskLater(SafeBuckets.PLUGIN, () -> {
+                player.getEquipment().setItemInMainHand(mainHand);
+                if (relativeBlock.getType() == Material.WATER) {
+                    relativeBlock.setType(Material.AIR);
+                }
+            }, 1);
+            return;
 
             // the clicked block is waterloggable, but it's either not waterlogged
             // or is already unsafe, so turn attention to the relative block instead
@@ -349,21 +353,16 @@ public class SafeBucketsListener implements Listener {
             return;
         }
 
-        if (clickedBlock instanceof Waterlogged) {
-            if (((Waterlogged) clickedBlock.getBlockData()).isWaterlogged()) {
-                if (SafeBuckets.isSafe(clickedBlock)) {
-                    event.setCancelled(true);
-                    if (SafeBuckets.isPlayerFlowPermitted(player, clickedBlock)) {
-                        SafeBuckets.setSafe(clickedBlock, false);
-                        player.sendMessage(ChatColor.DARK_AQUA + "Flowed " + clickedBlock.getType().toString() + " at " + Util.formatCoords(clickedBlock.getLocation()));
-                        Util.playFlowSound(player);
-                        return;
-                    } else {
-                        player.sendMessage(ChatColor.RED + "You can only flow liquids in regions you " + (Configuration.PLAYER_SELF_FLOW_MODE == PlayerFlowMode.OWNER ? "own" : "are a member of") + "!");
-                        return;
-                    }
-                }
+        if (Util.isWaterlogged(clickedBlock) && SafeBuckets.isSafe(clickedBlock)) {
+            if (SafeBuckets.isPlayerFlowPermitted(player, clickedBlock)) {
+                SafeBuckets.setSafe(clickedBlock, false);
+                player.sendMessage(ChatColor.DARK_AQUA + "Flowed " + clickedBlock.getType().toString() + " at " + Util.formatCoords(clickedBlock.getLocation()));
+                Util.playFlowSound(player);
+            } else {
+                player.sendMessage(ChatColor.RED + "You can only flow liquids in regions you " + (Configuration.PLAYER_SELF_FLOW_MODE == PlayerFlowMode.OWNER ? "own" : "are a member of") + "!");
             }
+            event.setCancelled(true);
+            return;
         }
 
         if (relativeBlock.getType() == Material.WATER || relativeBlock.getType() == Material.LAVA) {

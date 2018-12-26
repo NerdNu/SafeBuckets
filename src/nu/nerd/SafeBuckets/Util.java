@@ -37,7 +37,7 @@ class Util {
      * @return true if the given block is waterlogged.
      */
     static boolean isWaterlogged(Block block) {
-        return block instanceof Waterlogged && ((Waterlogged) block.getBlockData()).isWaterlogged();
+        return block.getBlockData() instanceof Waterlogged && ((Waterlogged) block.getBlockData()).isWaterlogged();
     }
 
     // ------------------------------------------------------------------------
