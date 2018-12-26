@@ -15,6 +15,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Waterlogged;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -148,13 +149,7 @@ public class SafeBucketsListener implements Listener {
 
         // handle waterloggables
         if (block.getBlockData() instanceof Waterlogged && ((Waterlogged)block.getBlockData()).isWaterlogged()) {
-            Location blockLoc = block.getLocation();
-            Bukkit.getScheduler().runTaskLater(SafeBuckets.PLUGIN, () -> {
-                Block blockNextTick = blockLoc.getWorld().getBlockAt(blockLoc);
-                if (blockNextTick.getType() == Material.WATER) {
-                    SafeBuckets.setSafe(blockNextTick, true);
-                }
-            }, 1);
+            SafeBuckets.setSafe(block, true);
         }
 
         // meltable ice broken
@@ -199,6 +194,11 @@ public class SafeBucketsListener implements Listener {
                     SafeBuckets.setSafe(event.getBlockPlaced(), true);
                 }
             }
+        }
+        // handle waterloggables
+        Block block = event.getBlock();
+        if (block.getBlockData() instanceof Waterlogged && ((Waterlogged)block.getBlockData()).isWaterlogged()) {
+            SafeBuckets.setSafe(block, true);
         }
     }
 
