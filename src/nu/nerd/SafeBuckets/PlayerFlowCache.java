@@ -67,9 +67,11 @@ class PlayerFlowCache implements Listener {
      * @param player the player.
      */
     static void forceExpire(Player player) {
-        SafeBuckets.log("Forcing cache to expire for: " + player.getName());
-        _activePlayers.remove(player.getUniqueId());
-        player.sendMessage(ChatColor.DARK_AQUA + "Flow mode is " + ChatColor.YELLOW + "off");
+        if (isCached(player)) {
+            SafeBuckets.log("Forcing cache to expire for: " + player.getName());
+            _activePlayers.remove(player.getUniqueId());
+            player.sendMessage(ChatColor.DARK_AQUA + "Flow mode is " + ChatColor.YELLOW + "off");
+        }
     }
 
     // ------------------------------------------------------------------------
