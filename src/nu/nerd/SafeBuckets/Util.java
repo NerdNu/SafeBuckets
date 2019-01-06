@@ -31,6 +31,14 @@ class Util {
 
     // ------------------------------------------------------------------------
     /**
+     * A set of the different types of air blocks.
+     */
+    static final HashSet<Material> AIR_BLOCKS = new HashSet<>(Arrays.asList(
+        Material.AIR, Material.CAVE_AIR, Material.VOID_AIR
+    ));
+
+    // ------------------------------------------------------------------------
+    /**
      * Returns true if the given block is waterlogged.
      *
      * @param block the block.
