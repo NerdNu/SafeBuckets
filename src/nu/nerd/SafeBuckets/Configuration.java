@@ -60,6 +60,8 @@ class Configuration {
         WORLDEDIT_HOOK = _config.getBoolean("worldedit.hook", true);
         WORLDEDIT_FLOWSEL_ENABLED = _config.getBoolean("worldedit.flow-selection.enabled", true);
         WORLDEDIT_FLOWSEL_MAX_BLOCKS = _config.getInt("worldedit.flow-selection.maxblocks", 100);
+
+        SHOW_PARTICLES = _config.getBoolean("show-particle-effects", false);
     }
 
     // ------------------------------------------------------------------------
@@ -176,5 +178,10 @@ class Configuration {
      * The period (in ticks) between each player self-flow mode cache review.
      */
     static int PLAYER_SELF_FLOW_CACHE_REVIEW_PERIOD;
+
+    /**
+     * If particles should be shown when a block's safety status changes.
+     */
+    static boolean SHOW_PARTICLES;
 
 } // Configuration

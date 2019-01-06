@@ -112,7 +112,12 @@ public class SafeBuckets extends JavaPlugin {
             CACHE.remove(block.getLocation());
             Util.forceBlockUpdate(block);
         }
-        Bukkit.getScheduler().runTaskLaterAsynchronously(PLUGIN, () -> Util.showParticles(block, state), 1);
+
+        // check if there's an entry before spawning particles
+        if (Configuration.SHOW_PARTICLES && BlockStoreApi.getBlockMeta(block, PLUGIN, METADATA_KEY) != null) {
+            Bukkit.getScheduler().runTaskLaterAsynchronously(PLUGIN, () -> Util.showParticles(block, state), 1);
+        }
+
         BlockStoreApi.setBlockMeta(block, PLUGIN, METADATA_KEY, state);
     }
 
@@ -126,7 +131,10 @@ public class SafeBuckets extends JavaPlugin {
     static void removeSafe(Block block) {
         CACHE.remove(block.getLocation());
         BlockStoreApi.removeBlockMeta(block, PLUGIN, METADATA_KEY);
-        Util.showParticles(block, false);
+        // check if there's an entry before spawning particles
+        if (BlockStoreApi.getBlockMeta(block, PLUGIN, METADATA_KEY) != null) {
+            Bukkit.getScheduler().runTaskLaterAsynchronously(PLUGIN, () -> Util.showParticles(block, false), 1);
+        }
     }
 
     // ------------------------------------------------------------------------
