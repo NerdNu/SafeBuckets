@@ -237,6 +237,10 @@ public class SafeBucketsListener implements Listener {
                 SafeBuckets.setSafe(relativeBlock, true);
             } else if (Util.AIR_BLOCKS.contains(relativeBlock.getType())) {
                 SafeBuckets.setSafe(relativeBlock, true);
+            } else {
+                // it is safebuckets, after all
+                SafeBuckets.setSafe(relativeBlock, true);
+                SafeBuckets.setSafe(clickedBlock, true);
             }
             return;
         }
