@@ -11,17 +11,27 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.List;
 
 // ------------------------------------------------------------------------
 /**
  * The command-handling class.
  */
-public class Commands implements CommandExecutor {
+public class Commands implements TabExecutor {
+
+    private static final LinkedHashSet<String> SUBCOMMANDS = new LinkedHashSet<>(Arrays.asList(
+        "flowsel", "reload", "safe", "unsafe"
+    ));
 
     // ------------------------------------------------------------------------
     /**
@@ -44,6 +54,37 @@ public class Commands implements CommandExecutor {
             return playerFlowCommand(sender);
         }
         return false;
+    }
+
+    // ------------------------------------------------------------------------
+    /**
+     * @see TabCompleter#onTabComplete(CommandSender, Command, String, String[]).
+     */
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (command.getName().equalsIgnoreCase("flow")) {
+            // no args
+            return new ArrayList<>();
+        }
+
+        // /sb
+        List<String> completions = new ArrayList<>();
+        if (args == null || args.length == 0 || (args.length == 1 && args[0].equals(""))) {
+            completions.addAll(SUBCOMMANDS);
+        } else if (args.length == 1) {
+            String arg = args[0];
+            SUBCOMMANDS.stream().filter(s -> s.startsWith(arg)).forEach(completions::add);
+        } else if (args.length == 2) {
+            String arg = args[0];
+            if (arg.equalsIgnoreCase("safe") || arg.equalsIgnoreCase("unsafe")) {
+                if ("".equals(args[1])) {
+                    return Arrays.asList("lava", "water");
+                }
+                if ("water".startsWith(args[1])) completions.add("water");
+                if ("lava".startsWith(args[1])) completions.add("lava");
+            }
+        }
+        return completions;
     }
 
     // ------------------------------------------------------------------------
