@@ -31,6 +31,10 @@ tools:
   # - default: BLAZE_ROD
   inspection-tool: BLAZE_ROD
 
+  # Defines the Material for the inspection block.
+  # - default: LAPIS_ORE
+  inspection-block: LAPIS_ORE
+
 #####################################
 # +-------------------------------+ #
 # |           PHYSICS             | #

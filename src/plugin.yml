@@ -14,6 +14,8 @@ permissions:
     description: Permission to use the /flow command.
   safebuckets.tools.item:
     description: Permission to use the SafeBuckets inspector tool item.
+  safebuckets.tools.block:
+    description: : Permission to use the SafeBuckets inspector block.
   safebuckets.tools.unsafe:
     description: Permission to summon an unsafe liquid bucket.
   safebuckets.tools.norefill:

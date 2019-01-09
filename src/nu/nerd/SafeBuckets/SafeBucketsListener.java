@@ -305,9 +305,11 @@ public class SafeBucketsListener implements Listener {
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         if (event.getAction() == Action.LEFT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-            if (event.hasItem() && event.getItem().getType() == Configuration.TOOL_ITEM) {
-                if (player.hasPermission("safebuckets.tools.item")) {
+            if (event.hasItem()) {
+                if (event.getItem().getType() == Configuration.TOOL_ITEM && player.hasPermission("safebuckets.tools.item")) {
                     useTool(event, event.getClickedBlock());
+                } else if (event.getItem().getType() == Configuration.INSPECTION_BLOCK && player.hasPermission("safebuckets.tools.block")) {
+                    useBlock(event, event.getClickedBlock());
                 }
             }
             if (event.getAction() != Action.RIGHT_CLICK_BLOCK) {
@@ -320,10 +322,21 @@ public class SafeBucketsListener implements Listener {
 
     // ------------------------------------------------------------------------
     /**
-     * Handles tool-based actions: safety status querying, and safety status
-     * toggling.
+     * Handles safety status querying and safety status toggling with the
+     * inspector item.
      */
     private void useTool(PlayerInteractEvent event, Block block) {
+        event.setCancelled(true);
+        Player player = event.getPlayer();
+        boolean isSafe = SafeBuckets.isSafe(block);
+        player.sendMessage(ChatColor.DARK_AQUA + "SafeBuckets query: " + Util.formatCoords(block.getLocation()) + " is " + ChatColor.YELLOW + (isSafe ? "safe" : "unsafe"));
+    }
+
+    // ------------------------------------------------------------------------
+    /**
+     * Handles safety status querying with the inspector block.
+     */
+    private void useBlock(PlayerInteractEvent event, Block block) {
         event.setCancelled(true);
         Player player = event.getPlayer();
         boolean isSafe = SafeBuckets.isSafe(block);

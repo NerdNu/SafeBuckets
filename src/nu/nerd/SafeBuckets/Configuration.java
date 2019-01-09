@@ -38,6 +38,7 @@ class Configuration {
         BUCKETS.addAll(getMaterialList("buckets.list"));
 
         TOOL_ITEM = getMaterial("tools.inspection-tool", Material.BLAZE_ROD);
+        INSPECTION_BLOCK = getMaterial("tools.inspection-block", Material.LAPIS_ORE);
 
         PREVENT_ICE_MELT = _config.getBoolean("physics.prevent-ice-melt", true);
 
@@ -118,6 +119,11 @@ class Configuration {
      * The safe/unsafe inspection tool.
      */
     static Material TOOL_ITEM;
+
+    /**
+     * The status query block material.
+     */
+    static Material INSPECTION_BLOCK;
 
     /**
      * If true, ice will not melt.
