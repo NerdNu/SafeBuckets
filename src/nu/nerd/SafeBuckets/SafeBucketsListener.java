@@ -309,7 +309,7 @@ public class SafeBucketsListener implements Listener {
                 if (event.getItem().getType() == Configuration.TOOL_ITEM && player.hasPermission("safebuckets.tools.item")) {
                     useTool(event, event.getClickedBlock());
                 } else if (event.getItem().getType() == Configuration.INSPECTION_BLOCK && player.hasPermission("safebuckets.tools.block")) {
-                    useBlock(event, event.getClickedBlock());
+                    useBlock(event, event.getClickedBlock().getRelative(event.getBlockFace()));
                 }
             }
             if (event.getAction() != Action.RIGHT_CLICK_BLOCK) {
@@ -322,10 +322,9 @@ public class SafeBucketsListener implements Listener {
 
     // ------------------------------------------------------------------------
     /**
-     * Handles safety status querying and safety status toggling with the
-     * inspector item.
+     * Handles safety status querying with the inspector block.
      */
-    private void useTool(PlayerInteractEvent event, Block block) {
+    private void useBlock(PlayerInteractEvent event, Block block) {
         event.setCancelled(true);
         Player player = event.getPlayer();
         boolean isSafe = SafeBuckets.isSafe(block);
@@ -334,9 +333,10 @@ public class SafeBucketsListener implements Listener {
 
     // ------------------------------------------------------------------------
     /**
-     * Handles safety status querying with the inspector block.
+     * Handles safety status querying and safety status toggling with the
+     * inspector item.
      */
-    private void useBlock(PlayerInteractEvent event, Block block) {
+    private void useTool(PlayerInteractEvent event, Block block) {
         event.setCancelled(true);
         Player player = event.getPlayer();
         boolean isSafe = SafeBuckets.isSafe(block);
