@@ -6,7 +6,8 @@ website: ${project.url}
 database: true
 authors: [Travis Watkins, Ed Kellett, Stephen McGregor, totemo, redwall_hp, bermudalocket]
 depend: [BlockStore]
-softdepend: [WorldEdit, WorldGuard, Multiverse-Core]
+softdepend: [WorldEdit, WorldGuard]
+loadbefore: [Multiverse-Core]
 api-version: 1.13
 
 permissions:
