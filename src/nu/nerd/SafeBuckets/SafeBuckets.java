@@ -110,7 +110,6 @@ public class SafeBuckets extends JavaPlugin {
             CACHE.add(block.getLocation());
         } else {
             CACHE.remove(block.getLocation());
-            Util.forceBlockUpdate(block);
         }
 
         // check if there's an entry before spawning particles
@@ -119,6 +118,10 @@ public class SafeBuckets extends JavaPlugin {
         }
 
         BlockStoreApi.setBlockMeta(block, PLUGIN, METADATA_KEY, state);
+
+        if (!state) {
+            Util.forceBlockUpdate(block);
+        }
     }
 
     // ------------------------------------------------------------------------

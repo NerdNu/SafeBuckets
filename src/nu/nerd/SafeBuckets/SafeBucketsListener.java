@@ -26,6 +26,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.event.block.BlockFadeEvent;
 import org.bukkit.event.block.BlockFromToEvent;
+import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
@@ -93,6 +94,23 @@ public class SafeBucketsListener implements Listener {
     public void onBlockFromTo(BlockFromToEvent event) {
         if (SafeBuckets.isSafe(event.getBlock())) {
             event.setCancelled(true);
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    /**
+     * More flowing liquid protection.
+     */
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onBlockPhysics(BlockPhysicsEvent event) {
+        if (event.getBlock() == null) {
+            return;
+        }
+        Material blockType = event.getBlock().getType();
+        if (blockType == Material.WATER || blockType == Material.LAVA) {
+            if (SafeBuckets.isSafe(event.getBlock())) {
+                event.setCancelled(true);
+            }
         }
     }
 
@@ -215,7 +233,7 @@ public class SafeBucketsListener implements Listener {
     /**
      * Handles liquids being placed by bucket. Includes logic for staff flowing.
      */
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerBucketEmpty(PlayerBucketEmptyEvent event) {
         if (!Configuration.BUCKETS_ENABLED) {
             event.setCancelled(true);
