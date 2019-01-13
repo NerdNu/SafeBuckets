@@ -5,6 +5,10 @@
 #####################################
 show-particle-effects: false
 
+# If debug messages should be sent to those with
+# the safebuckets.debug permission.
+debug: false
+
 #####################################
 # +-------------------------------+ #
 # |           LIQUIDS             | #

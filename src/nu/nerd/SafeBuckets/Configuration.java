@@ -28,6 +28,8 @@ class Configuration {
         SafeBuckets.PLUGIN.saveDefaultConfig();
         _config = SafeBuckets.PLUGIN.getConfig();
 
+        DEBUG = _config.getBoolean("debug", false);
+
         LIQUID_BLOCKS.clear();
         LIQUID_BLOCKS.addAll(getMaterialList("liquids"));
 
@@ -99,6 +101,12 @@ class Configuration {
      * The currently-loaded FileConfiguration instance.
      */
     private static FileConfiguration _config;
+
+    /**
+     * If debug messages should be sent to those with the safebuckets.debug
+     * permission.
+     */
+    static boolean DEBUG;
 
     /**
      * A set of all liquid blocks to be handled.

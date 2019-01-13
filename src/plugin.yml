@@ -11,6 +11,8 @@ loadbefore: [Multiverse-Core]
 api-version: 1.13
 
 permissions:
+  safebuckets.debug:
+    description: Permission to recieve debug messages if enabled in config.
   safebuckets.playerflow:
     description: Permission to use the /flow command.
   safebuckets.tools.item:

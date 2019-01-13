@@ -86,13 +86,16 @@ public class SafeBuckets extends JavaPlugin {
      */
     static boolean isSafe(Block block) {
         if (CACHE.contains(block.getLocation())) {
+            sendDebugMessage("Safety query: " + Util.formatCoords(block.getLocation()) + " is §aSAFE");
             return true;
         } else {
             Object o = BlockStoreApi.getBlockMeta(block, SafeBuckets.PLUGIN, METADATA_KEY);
             if (o == null || !((boolean) o)) {
+                sendDebugMessage("Safety query: " + Util.formatCoords(block.getLocation()) + " is §cUNSAFE");
                 return false;
             } else {
                 CACHE.add(block.getLocation());
+                sendDebugMessage("Safety query: " + Util.formatCoords(block.getLocation()) + " is §aSAFE");
                 return true;
             }
         }
@@ -107,8 +110,10 @@ public class SafeBuckets extends JavaPlugin {
      */
     static void setSafe(Block block, boolean state) {
         if (state) {
+            sendDebugMessage("Safety change: " + Util.formatCoords(block.getLocation()) + " has been made §aSAFE");
             CACHE.add(block.getLocation());
         } else {
+            sendDebugMessage("Safety change: " + Util.formatCoords(block.getLocation()) + " has been made §cUNSAFE");
             CACHE.remove(block.getLocation());
         }
 
@@ -138,6 +143,7 @@ public class SafeBuckets extends JavaPlugin {
         if (BlockStoreApi.getBlockMeta(block, PLUGIN, METADATA_KEY) != null) {
             Bukkit.getScheduler().runTaskLaterAsynchronously(PLUGIN, () -> Util.showParticles(block, false), 1);
         }
+        sendDebugMessage("Safety change: " + Util.formatCoords(block.getLocation()) + " has been made §aSAFE");
     }
 
     // ------------------------------------------------------------------------
@@ -219,6 +225,23 @@ public class SafeBuckets extends JavaPlugin {
      */
     static void log(String msg) {
         System.out.println(PREFIX + msg);
+    }
+
+    // ------------------------------------------------------------------------
+    /**
+     * Sends a debug message to players with the safebuckets.debug permission.
+     *
+     * @param msg the debug message to be sent.
+     */
+    static void sendDebugMessage(String msg) {
+        if (!Configuration.DEBUG) {
+            return;
+        }
+        Bukkit.getServer().getOnlinePlayers().forEach(player -> {
+            if (player.hasPermission("safebuckets.debug")) {
+                player.sendMessage(PREFIX + msg);
+            }
+        });
     }
 
     // ------------------------------------------------------------------------
