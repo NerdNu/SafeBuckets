@@ -262,6 +262,11 @@ public class SafeBucketsListener implements Listener {
                 SafeBuckets.setSafe(relativeBlock, true);
             } else if (Util.AIR_BLOCKS.contains(relativeBlock.getType())) {
                 SafeBuckets.setSafe(relativeBlock, true);
+            } else if (relativeBlock.getType() == Material.WATER && !SafeBuckets.isSafe(relativeBlock)) {
+                // emptying a bucket on an unsafe source will not stop the flow,
+                // so let's not make the block safe again (which will just then
+                // make the stored state different from the actual state
+                return;
             } else {
                 // it is safebuckets, after all
                 SafeBuckets.setSafe(relativeBlock, true);
