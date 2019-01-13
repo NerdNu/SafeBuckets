@@ -106,10 +106,13 @@ public class SafeBucketsListener implements Listener {
         if (event.getBlock() == null) {
             return;
         }
-        Material blockType = event.getBlock().getType();
-        if (blockType == Material.WATER || blockType == Material.LAVA) {
-            if (SafeBuckets.isSafe(event.getBlock())) {
+        Block block = event.getBlock();
+        if (block.getType() == Material.WATER || block.getType() == Material.LAVA) {
+            if (SafeBuckets.isSafe(block)) {
                 event.setCancelled(true);
+                if (block.getType() == Material.WATER) {
+                    Util.findConcretePowder(block); // see javadoc for this method
+                }
             }
         }
     }

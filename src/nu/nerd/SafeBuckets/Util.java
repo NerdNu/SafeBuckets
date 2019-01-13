@@ -117,6 +117,24 @@ class Util {
 
     // ------------------------------------------------------------------------
     /**
+     * Searches for concrete powder centered around a given block. If found, a
+     * block update is applied to each concrete powder block in order to force
+     * the game to then fire a BlockFormEvent to turn it into regular concrete.
+     * For some reason in 1.13 cancelling the BlockPhysicsEvent causes the
+     * BlockFormEvent to not fire, resulting in the concrete powder not turning
+     * into concrete.
+     *
+     * @param centeredAround the block to search around.
+     */
+    static void findConcretePowder(Block centeredAround) {
+        ADJACENT_BLOCK_FACES.stream()
+                            .map(centeredAround::getRelative)
+                            .filter(IS_CONCRETE_POWDER)
+                            .forEach(Util::forceBlockUpdate);
+    }
+
+    // ------------------------------------------------------------------------
+    /**
      * A set of BlockFaces directly adjacent to an abstract block.
      */
     private static final HashSet<BlockFace> ADJACENT_BLOCK_FACES = new HashSet<>(Arrays.asList(
@@ -131,6 +149,35 @@ class Util {
      *                         { y : y < 0 || y > 255 }.
      */
     private static final Predicate<Block> IS_AIR = (block) -> block.getType() == Material.AIR || block.getType() == Material.CAVE_AIR;
+
+    // ------------------------------------------------------------------------
+    /**
+     * A set of all concrete powder Materials.
+     */
+    private static final HashSet<Material> CONCRETE_POWDERS = new HashSet<>(Arrays.asList(
+        Material.BLACK_CONCRETE_POWDER,
+        Material.BLUE_CONCRETE_POWDER,
+        Material.BROWN_CONCRETE_POWDER,
+        Material.CYAN_CONCRETE_POWDER,
+        Material.GRAY_CONCRETE_POWDER,
+        Material.GREEN_CONCRETE_POWDER,
+        Material.LIGHT_BLUE_CONCRETE_POWDER,
+        Material.LIGHT_GRAY_CONCRETE_POWDER,
+        Material.LIME_CONCRETE_POWDER,
+        Material.MAGENTA_CONCRETE_POWDER,
+        Material.ORANGE_CONCRETE_POWDER,
+        Material.PINK_CONCRETE_POWDER,
+        Material.PURPLE_CONCRETE_POWDER,
+        Material.RED_CONCRETE_POWDER,
+        Material.YELLOW_CONCRETE_POWDER,
+        Material.WHITE_CONCRETE_POWDER
+    ));
+
+    // ------------------------------------------------------------------------
+    /**
+     * A predicate which tests if a block is concrete powder.
+     */
+    private static final Predicate<Block> IS_CONCRETE_POWDER = (block) -> CONCRETE_POWDERS.contains(block.getType());
 
     // ------------------------------------------------------------------------
     /**
