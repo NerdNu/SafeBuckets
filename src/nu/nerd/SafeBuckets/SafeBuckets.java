@@ -72,11 +72,20 @@ public class SafeBuckets extends JavaPlugin {
     /**
      * @see JavaPlugin#onDisable().
      */
+/*
     @Override
     public void onDisable() {
-        getServer().getScheduler().cancelTasks(this);
+        for (Location location : CACHE) {
+            Block block = location.getBlock();
+            if (block.getType() == Material.WATER || block.getType() == Material.LAVA) {
+                Object meta = BlockStoreApi.getBlockMeta(block, this, METADATA_KEY);
+                if (meta == null || !((boolean) meta)) {
+                    BlockStoreApi.setBlockMeta(block, this, METADATA_KEY, true);
+                }
+            }
+        }
     }
-
+*/
     // ------------------------------------------------------------------------
     /**
      * If true, the given block is safe. Consults cache before calling the BlockStore API.
@@ -109,24 +118,26 @@ public class SafeBuckets extends JavaPlugin {
      * @param state the safety status (true = safe).
      */
     static void setSafe(Block block, boolean state) {
-        if (state) {
-            sendDebugMessage("Safety change: " + Util.formatCoords(block.getLocation()) + " has been made §aSAFE");
-            CACHE.add(block.getLocation());
-        } else {
-            sendDebugMessage("Safety change: " + Util.formatCoords(block.getLocation()) + " has been made §cUNSAFE");
-            CACHE.remove(block.getLocation());
-        }
+        Bukkit.getScheduler().runTaskLater(PLUGIN, () -> {
+            if (state) {
+                sendDebugMessage("Safety change: " + Util.formatCoords(block.getLocation()) + " has been made §aSAFE");
+                CACHE.add(block.getLocation());
+            } else {
+                sendDebugMessage("Safety change: " + Util.formatCoords(block.getLocation()) + " has been made §cUNSAFE");
+                CACHE.remove(block.getLocation());
+            }
 
-        // check if there's an entry before spawning particles
-        if (Configuration.SHOW_PARTICLES && BlockStoreApi.getBlockMeta(block, PLUGIN, METADATA_KEY) != null) {
-            Bukkit.getScheduler().runTaskLaterAsynchronously(PLUGIN, () -> Util.showParticles(block, state), 1);
-        }
+            // check if there's an entry before spawning particles
+            if (Configuration.SHOW_PARTICLES && BlockStoreApi.getBlockMeta(block, PLUGIN, METADATA_KEY) != null) {
+                Bukkit.getScheduler().runTaskLaterAsynchronously(PLUGIN, () -> Util.showParticles(block, state), 1);
+            }
 
-        BlockStoreApi.setBlockMeta(block, PLUGIN, METADATA_KEY, state);
+            BlockStoreApi.setBlockMeta(block, PLUGIN, METADATA_KEY, state);
 
-        if (!state) {
-            Util.forceBlockUpdate(block);
-        }
+            if (!state) {
+                Util.forceBlockUpdate(block);
+            }
+        }, 1);
     }
 
     // ------------------------------------------------------------------------
