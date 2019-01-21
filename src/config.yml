@@ -3,11 +3,20 @@
 # |             MISC              | #
 # +-------------------------------+ #
 #####################################
+# If particle effects should be shown when a block's
+# safety status changes.
+# - default: false
 show-particle-effects: false
 
 # If debug messages should be sent to those with
 # the safebuckets.debug permission.
+# - default: false
 debug: false
+
+# A list of worlds in which every liquid block should
+# be made safe upon load.
+force-safe:
+  - 6k
 
 #####################################
 # +-------------------------------+ #
@@ -119,7 +128,7 @@ worldedit:
     # of a WorldEdit selection for flowing. For no
     # restriction, use 0.
     # - default: 300
-    maxsize: 100
+    maxblocks: 100
 
 #####################################
 # +-------------------------------+ #
