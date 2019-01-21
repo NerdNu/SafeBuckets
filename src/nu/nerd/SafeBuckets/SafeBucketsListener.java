@@ -146,7 +146,7 @@ public class SafeBucketsListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockFade(BlockFadeEvent event) {
         if (event.getNewState().getType() == Material.WATER) {
-            if (Configuration.PREVENT_ICE_MELT) {
+            if (Configuration.PREVENT_ICE_MELT && event.getBlock().getType() != Material.FROSTED_ICE) {
                 event.setCancelled(true);
             } else {
                 SafeBuckets.setSafe(event.getBlock(), true);
