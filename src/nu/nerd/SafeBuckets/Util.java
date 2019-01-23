@@ -135,6 +135,27 @@ class Util {
 
     // ------------------------------------------------------------------------
     /**
+     * Limits the height of kelp plants. This method patches what is essentially
+     * a vanilla exploit that allows players to make kelp towers taller than the
+     * intended maximum of 26.
+     *
+     * @param kelp the newly-placed kelp.
+     * @return true if the kelp tower will be limited; false otherwise.
+     */
+    static boolean limitKelpHeight(Block kelp) {
+        Location placedKelpLoc = kelp.getLocation();
+        Location lowestPossibleKelp = placedKelpLoc.clone().subtract(0, 26, 0);
+        switch (lowestPossibleKelp.getBlock().getType()) {
+            case KELP:
+            case KELP_PLANT:
+                return true;
+
+            default: return false;
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    /**
      * A set of BlockFaces directly adjacent to an abstract block.
      */
     private static final HashSet<BlockFace> ADJACENT_BLOCK_FACES = new HashSet<>(Arrays.asList(

@@ -15,6 +15,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Waterlogged;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -103,10 +104,10 @@ public class SafeBucketsListener implements Listener {
      */
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockPhysics(BlockPhysicsEvent event) {
-        if (event.getBlock() == null) {
+        Block block = event.getBlock();
+        if (block == null) {
             return;
         }
-        Block block = event.getBlock();
         if (block.getType() == Material.WATER || block.getType() == Material.LAVA) {
             if (SafeBuckets.isSafe(block)) {
                 event.setCancelled(true);
@@ -171,6 +172,13 @@ public class SafeBucketsListener implements Listener {
             return;
         }
 
+        if (blockType == Material.KELP || blockType == Material.KELP_PLANT) {
+            Location location = block.getLocation();
+            Bukkit.getScheduler().runTaskLater(SafeBuckets.PLUGIN, () -> {
+                SafeBuckets.setSafe(block.getWorld().getBlockAt(location), true);
+            }, 1);
+        }
+
         // handle waterloggables
         if (Util.isWaterlogged(block)) {
             SafeBuckets.setSafe(block, true);
@@ -202,33 +210,54 @@ public class SafeBucketsListener implements Listener {
 
     // ------------------------------------------------------------------------
     /**
-     * Automatically makes placed dispensers safe.
+     * Handle the placing of blocks in the world.
      */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent event) {
-        if (event.getBlockReplacedState().getType() == Material.WATER || event.getBlockReplacedState().getType() == Material.LAVA) {
-            if (!Util.isWaterlogged(event.getBlockPlaced()) && event.getBlockPlaced().getType() != Material.WATER && event.getBlockPlaced().getType() != Material.LAVA) {
-                SafeBuckets.removeSafe(event.getBlockPlaced());
-                return;
-            }
-        }
+        Block placedBlock = event.getBlockPlaced();
+        Material placedType = event.getBlockPlaced().getType();
+        Material replacedType = event.getBlockReplacedState().getType();
 
-        if (event.getBlockPlaced().getType() == Material.DISPENSER) {
-            if (!Configuration.DISPENSERS_ENABLED) {
-                event.setCancelled(true);
-                return;
-            } else {
-                if (Configuration.DISPENSERS_SAFE) {
-                    SafeBuckets.setSafe(event.getBlockPlaced(), true);
-                    return;
+        switch (placedType) {
+            case KELP_PLANT:
+            case KELP:
+                if (Util.limitKelpHeight(placedBlock)) {
+                    event.setCancelled(true);
+                } else {
+                    SafeBuckets.setSafe(placedBlock, true);
                 }
-            }
-        }
+                break;
 
-        // handle waterloggables
-        Block block = event.getBlock();
-        if (Util.isWaterlogged(block)) {
-            SafeBuckets.setSafe(block, true);
+            case SEAGRASS:
+                SafeBuckets.setSafe(placedBlock, true);
+                break;
+
+            case TALL_SEAGRASS:
+                SafeBuckets.setSafe(placedBlock, true);
+                SafeBuckets.setSafe(placedBlock.getRelative(BlockFace.UP), true);
+                break;
+
+            case DISPENSER:
+                if (!Configuration.DISPENSERS_ENABLED) {
+                    event.setCancelled(true);
+                } else if (Configuration.DISPENSERS_SAFE) {
+                    SafeBuckets.setSafe(event.getBlockPlaced(), true);
+                }
+                break;
+
+            default:
+                if (replacedType == Material.WATER || replacedType == Material.LAVA) {
+                    if (!Util.isWaterlogged(placedBlock) && placedType != Material.WATER
+                                                         && placedType != Material.LAVA) {
+                        SafeBuckets.removeSafe(placedBlock);
+                        return;
+                    }
+                }
+                Block block = event.getBlock();
+                if (Util.isWaterlogged(block)) {
+                    SafeBuckets.setSafe(block, true);
+                }
+                break;
         }
     }
 
