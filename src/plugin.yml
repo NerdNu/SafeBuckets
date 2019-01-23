@@ -25,6 +25,8 @@ permissions:
     description: Players with this permission do not need to refill the unsafe buckets they empty.
   safebuckets.flowsel:
     description: Permission to use `/sb flowsel`.
+  safebuckets.safesel:
+    description: Permission to use `/sb safesel`.
   safebuckets.reload:
     description: Permission to use `/sb reload`.
 

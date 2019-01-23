@@ -30,7 +30,7 @@ import java.util.List;
 public class Commands implements TabExecutor {
 
     private static final LinkedHashSet<String> SUBCOMMANDS = new LinkedHashSet<>(Arrays.asList(
-        "flowsel", "reload", "safe", "unsafe"
+        "flowsel", "reload", "safe", "safesel", "unsafe"
     ));
 
     // ------------------------------------------------------------------------
@@ -122,9 +122,30 @@ public class Commands implements TabExecutor {
             }
 
             if (sender instanceof Player) {
-                flowLiquidsInSelection((Player) sender);
+                bulkSafetyToggle((Player) sender, false);
             } else {
                 sender.sendMessage(ChatColor.RED + "You must be in-game to flow liquids!");
+            }
+            return true;
+        }
+
+        // /sb safesel
+        if (args.length == 1 && args[0].equalsIgnoreCase("safesel")) {
+
+            if (!sender.hasPermission("safebuckets.safesel")) {
+                sender.sendMessage(ChatColor.RED + "You don't have permission to do that!");
+                return true;
+            }
+
+            if (!SafeBuckets._worldEditEnabled || !Configuration.WORLDEDIT_FLOWSEL_ENABLED) {
+                sender.sendMessage(ChatColor.RED + "That feature is not enabled.");
+                return true;
+            }
+
+            if (sender instanceof Player) {
+                bulkSafetyToggle((Player) sender, true);
+            } else {
+                sender.sendMessage(ChatColor.RED + "You must be in-game to manage liquids!");
             }
             return true;
         }
@@ -236,7 +257,7 @@ public class Commands implements TabExecutor {
      *
      * @param player the player performing the action.
      */
-    private void flowLiquidsInSelection(Player player) {
+    private void bulkSafetyToggle(Player player, boolean state) {
         int blocksAffected = 0;
 
         if (!SafeBuckets._worldEditEnabled) {
@@ -272,14 +293,14 @@ public class Commands implements TabExecutor {
                 for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
                     Block block = world.getBlockAt(x, y, z);
                     if (block.getType() == Material.WATER || block.getType() == Material.LAVA || Util.isWaterlogged(block)) {
-                        SafeBuckets.setSafe(block, false);
+                        SafeBuckets.setSafe(block, state);
                         blocksAffected++;
                     }
                 }
             }
         }
 
-        player.sendMessage(ChatColor.LIGHT_PURPLE + "Flowed " + blocksAffected + " blocks around " + Util.formatCoords(player.getLocation()) + ".");
+        player.sendMessage(ChatColor.LIGHT_PURPLE + (state ? "Made safe " : "Flowed ") + blocksAffected + " blocks around " + Util.formatCoords(player.getLocation()) + ".");
     }
 
 }
