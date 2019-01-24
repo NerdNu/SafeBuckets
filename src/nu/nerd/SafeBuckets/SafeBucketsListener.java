@@ -432,7 +432,7 @@ public class SafeBucketsListener implements Listener {
         if (Util.isWaterlogged(clickedBlock) && SafeBuckets.isSafe(clickedBlock)) {
             if (SafeBuckets.isPlayerFlowPermitted(player, clickedBlock)) {
                 SafeBuckets.setSafe(clickedBlock, false);
-                player.sendMessage(ChatColor.DARK_AQUA + "Flowed " + clickedBlock.getType().toString() + " at " + Util.formatCoords(clickedBlock.getLocation()));
+                SafeBuckets.messageAndLog(player, ChatColor.DARK_AQUA + "Flowed " + clickedBlock.getType().toString() + " at " + Util.formatCoords(clickedBlock.getLocation()));
                 Util.playFlowSound(player);
             } else {
                 player.sendMessage(ChatColor.RED + "You can only flow liquids in regions you " + (Configuration.PLAYER_SELF_FLOW_MODE == PlayerFlowMode.OWNER ? "own" : "are a member of") + "!");
@@ -446,7 +446,7 @@ public class SafeBucketsListener implements Listener {
                 event.setCancelled(true);
                 if (SafeBuckets.isPlayerFlowPermitted(player, relativeBlock)) {
                     SafeBuckets.setSafe(relativeBlock, false);
-                    player.sendMessage(ChatColor.DARK_AQUA + "Flowed " + relativeBlock.getType().toString() + " at " + Util.formatCoords(relativeBlock.getLocation()));
+                    SafeBuckets.messageAndLog(player, ChatColor.DARK_AQUA + "Flowed " + relativeBlock.getType().toString() + " at " + Util.formatCoords(relativeBlock.getLocation()));
                     Util.playFlowSound(player);
                 } else {
                     player.sendMessage(ChatColor.RED + "You can only flow liquids in regions you " + (Configuration.PLAYER_SELF_FLOW_MODE == PlayerFlowMode.OWNER ? "own" : "are a member of") + "!");

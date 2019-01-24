@@ -222,6 +222,19 @@ public class SafeBuckets extends JavaPlugin {
 
     // ------------------------------------------------------------------------
     /**
+     * Sends the message to the given player and logs it (and the player's name)
+     * to console.
+     *
+     * @param player the player.
+     * @param msg the message to log.
+     */
+    static void messageAndLog(Player player, String msg) {
+        System.out.println(PREFIX + msg);
+        player.sendMessage(PREFIX + "[sent to: " + player.getName() + "] " +  msg);
+    }
+
+    // ------------------------------------------------------------------------
+    /**
      * Sends a debug message to players with the safebuckets.debug permission.
      *
      * @param msg the debug message to be sent.
