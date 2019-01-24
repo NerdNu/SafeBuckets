@@ -70,24 +70,6 @@ public class SafeBuckets extends JavaPlugin {
 
     // ------------------------------------------------------------------------
     /**
-     * @see JavaPlugin#onDisable().
-     */
-/*
-    @Override
-    public void onDisable() {
-        for (Location location : CACHE) {
-            Block block = location.getBlock();
-            if (block.getType() == Material.WATER || block.getType() == Material.LAVA) {
-                Object meta = BlockStoreApi.getBlockMeta(block, this, METADATA_KEY);
-                if (meta == null || !((boolean) meta)) {
-                    BlockStoreApi.setBlockMeta(block, this, METADATA_KEY, true);
-                }
-            }
-        }
-    }
-*/
-    // ------------------------------------------------------------------------
-    /**
      * If true, the given block is safe. Consults cache before calling the BlockStore API.
      *
      * @param block the block.
