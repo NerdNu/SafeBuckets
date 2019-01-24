@@ -10,6 +10,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.Levelled;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
@@ -279,10 +280,12 @@ public class Commands implements TabExecutor {
             return;
         }
 
-        int regionArea = region.getArea();
-        if (Configuration.WORLDEDIT_FLOWSEL_MAX_BLOCKS != 0 && regionArea > Configuration.WORLDEDIT_FLOWSEL_MAX_BLOCKS) {
-            player.sendMessage(ChatColor.RED + "Your selection must be under " + Configuration.WORLDEDIT_FLOWSEL_MAX_BLOCKS + " blocks!");
-            return;
+        if (!state && !player.hasPermission("safebuckets.override")) {
+            int regionArea = region.getArea();
+            if (Configuration.WORLDEDIT_FLOWSEL_MAX_BLOCKS != 0 && regionArea > Configuration.WORLDEDIT_FLOWSEL_MAX_BLOCKS) {
+                player.sendMessage(ChatColor.RED + "Your selection must be under " + Configuration.WORLDEDIT_FLOWSEL_MAX_BLOCKS + " blocks!");
+                return;
+            }
         }
 
         World world = player.getWorld();
@@ -293,6 +296,14 @@ public class Commands implements TabExecutor {
                 for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
                     Block block = world.getBlockAt(x, y, z);
                     if (block.getType() == Material.WATER || block.getType() == Material.LAVA || Util.isWaterlogged(block)) {
+                        if (state && block.getBlockData() instanceof Levelled) {
+                            Levelled levelled = (Levelled) block.getBlockData();
+                            if (levelled.getLevel() > 0) {
+                                block.setType(Material.AIR);
+                                blocksAffected++;
+                                continue;
+                            }
+                        }
                         SafeBuckets.setSafe(block, state);
                         blocksAffected++;
                     }
@@ -300,7 +311,7 @@ public class Commands implements TabExecutor {
             }
         }
 
-        player.sendMessage(ChatColor.LIGHT_PURPLE + (state ? "Made safe " : "Flowed ") + blocksAffected + " blocks around " + Util.formatCoords(player.getLocation()) + ".");
+        SafeBuckets.messageAndLog(player, ChatColor.LIGHT_PURPLE + (state ? "Made safe " : "Flowed ") + blocksAffected + " blocks around " + Util.formatCoords(player.getLocation()) + ".");
     }
 
 }

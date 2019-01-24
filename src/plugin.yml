@@ -29,6 +29,8 @@ permissions:
     description: Permission to use `/sb safesel`.
   safebuckets.reload:
     description: Permission to use `/sb reload`.
+  safebuckets.override:
+    description: Players with this permission are not restricted to the flowsel/safesel area limit.
 
 commands:
   sb:
