@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>SafeBuckets</groupId>
     <artifactId>SafeBuckets</artifactId>
-    <version>1.1.14</version>
+    <version>1.1.15-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>SafeBuckets</name>
     <description>Make water non-flowing for water from buckets</description>
