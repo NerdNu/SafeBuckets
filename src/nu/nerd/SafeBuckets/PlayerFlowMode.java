@@ -14,7 +14,8 @@ enum PlayerFlowMode {
 
     // ------------------------------------------------------------------------
     /**
-     * Players will only be able to flow liquids in WorldGuard regions of which they are a member.
+     * Players will only be able to flow liquids in WorldGuard regions of which
+     * they are a member.
      */
     MEMBER
 

@@ -62,7 +62,8 @@ class PlayerFlowCache implements Listener {
 
     // ------------------------------------------------------------------------
     /**
-     * Forces a player's flow session to expire, removing them from the cache and flow mode.
+     * Forces a player's flow session to expire, removing them from the cache and
+     * flow mode.
      *
      * @param player the player.
      */

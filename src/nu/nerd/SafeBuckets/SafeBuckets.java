@@ -70,7 +70,8 @@ public class SafeBuckets extends JavaPlugin {
 
     // ------------------------------------------------------------------------
     /**
-     * If true, the given block is safe. Consults cache before calling the BlockStore API.
+     * Returns true if the given block is safe. This method consults an internal
+     * cache for a result before calling the BlockStoreAPI if none is found.
      *
      * @param block the block.
      * @return true if the given block is safe.
@@ -94,7 +95,8 @@ public class SafeBuckets extends JavaPlugin {
 
     // ------------------------------------------------------------------------
     /**
-     * Sets the safety status of a given block and updates cache & BlockStore.
+     * Sets the safety status of a given block, updating the block's status both
+     * in the internal cache and BlockStore.
      *
      * @param block the block.
      * @param state the safety status (true = safe).
@@ -124,8 +126,10 @@ public class SafeBuckets extends JavaPlugin {
 
     // ------------------------------------------------------------------------
     /**
-     * Removes the safety status of the given block from both cache and BlockStore. Removal is not synonymous
-     * with setSafe(*, false).
+     * Removes the safety status of the given block from both cache and BlockStore.
+     * Removal is not necessarily synonymous with setSafe(*, false): the effects
+     * are the same but the false safety status implies intention while no status
+     * implies mundaneness.
      *
      * @param block the block.
      */
@@ -181,6 +185,8 @@ public class SafeBuckets extends JavaPlugin {
     /**
      * Determines if a player can flow a given block.
      *
+     * @apiNote Requires WorldGuard.
+     *
      * @param player the player.
      * @param block the block.
      * @return true if the player can flow the given block.
@@ -212,7 +218,8 @@ public class SafeBuckets extends JavaPlugin {
 
     // ------------------------------------------------------------------------
     /**
-     * A logging method used instead of {@link java.util.logging.Logger} to faciliate prefix coloring.
+     * A logging method used instead of {@link java.util.logging.Logger} to
+     * faciliate prefix coloring.
      *
      * @param msg the message to log.
      */

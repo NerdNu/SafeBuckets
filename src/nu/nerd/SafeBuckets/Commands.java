@@ -30,6 +30,10 @@ import java.util.List;
  */
 public class Commands implements TabExecutor {
 
+    // ------------------------------------------------------------------------
+    /**
+     * An ordered set of this plugin's subcommands.
+     */
     private static final LinkedHashSet<String> SUBCOMMANDS = new LinkedHashSet<>(Arrays.asList(
         "flowsel", "reload", "safe", "safesel", "unsafe"
     ));
@@ -254,9 +258,15 @@ public class Commands implements TabExecutor {
 
     // ------------------------------------------------------------------------
     /**
-     * Flows applicable liquids within a WorldEdit selection.
+     * A bulk safety-status-change operation. If state is true, liquid source
+     * blocks and waterloggables will be made safe, and all liquids with Levellable
+     * level nonzero will be removed (i.e. set to Material.AIR); if false, the
+     * liquids within the WorldEdit selection will be flowed.
+     *
+     * @apiNote Requires WorldEdit.
      *
      * @param player the player performing the action.
+     * @param state true to make safe; false to flow.
      */
     private void bulkSafetyToggle(Player player, boolean state) {
         int blocksAffected = 0;

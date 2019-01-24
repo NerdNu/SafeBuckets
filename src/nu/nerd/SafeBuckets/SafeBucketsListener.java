@@ -27,7 +27,6 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.event.block.BlockFadeEvent;
 import org.bukkit.event.block.BlockFromToEvent;
-import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
@@ -122,7 +121,7 @@ public class SafeBucketsListener implements Listener {
 
     // ------------------------------------------------------------------------
     /**
-     * Prevents ice from melting.
+     * Prevents ice (except frosted ice) from melting.
      */
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockFade(BlockFadeEvent event) {
@@ -137,9 +136,16 @@ public class SafeBucketsListener implements Listener {
 
     // ------------------------------------------------------------------------
     /**
-     * When a block of ice is broken the water that replaces it will be made safe
-     * unless the player is holding a tool enchanted with Silk Touch, in which
-     * case no water appears. When a dispenser is broken, remove its safety status.
+     * Handles a few things. If the broken block is...
+     *
+     *  (i) a dispenser, the block's safety information is removed from BlockStore;
+     *  (ii) kelp, the block's material will change from kelp to water and thus
+     *       needs to be made safe again;
+     *  (iii) generally waterloggable, it will be made safe since the water block
+     *        will usually persist (e.g. broken fence);
+     *  (iv) meltable ice, the resulting water block will be made safe, unless
+     *       the player is using a silk touch tool or the block does not actually
+     *       turn into water.
      */
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
@@ -190,7 +196,15 @@ public class SafeBucketsListener implements Listener {
 
     // ------------------------------------------------------------------------
     /**
-     * Handle the placing of blocks in the world.
+     * Handles a few things. If the placed block is...
+     *
+     *  (i) kelp, the height limit will be checked, and the resulting block will
+     *      be made safe if it is not kelp-limited;
+     *  (ii) seagrass, the block(s) will be made safe;
+     *  (iii) a dispenser, the block will be made safe;
+     *  (iv) water or lava, the block will not change safety state since the game
+     *       will not stop the block from flowing;
+     *  (v) generally waterloggable, it will be made safe.
      */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent event) {
