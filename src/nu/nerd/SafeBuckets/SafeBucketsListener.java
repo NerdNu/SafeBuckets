@@ -100,26 +100,6 @@ public class SafeBucketsListener implements Listener {
 
     // ------------------------------------------------------------------------
     /**
-     * More flowing liquid protection.
-     */
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onBlockPhysics(BlockPhysicsEvent event) {
-        Block block = event.getBlock();
-        if (block == null) {
-            return;
-        }
-        if (block.getType() == Material.WATER || block.getType() == Material.LAVA) {
-            if (SafeBuckets.isSafe(block)) {
-                event.setCancelled(true);
-                if (block.getType() == Material.WATER) {
-                    Util.findConcretePowder(block); // see javadoc for this method
-                }
-            }
-        }
-    }
-
-    // ------------------------------------------------------------------------
-    /**
      * Prevents WorldEdited liquids from flowing.
      */
     @Subscribe
