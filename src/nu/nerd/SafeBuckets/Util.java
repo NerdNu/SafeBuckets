@@ -117,44 +117,25 @@ class Util {
 
     // ------------------------------------------------------------------------
     /**
-     * Searches for concrete powder centered around a given block. If found, a
-     * block update is applied to each concrete powder block in order to force
-     * the game to then fire a BlockFormEvent to turn it into regular concrete.
-     * For some reason in 1.13 cancelling the BlockPhysicsEvent causes the
-     * BlockFormEvent to not fire, resulting in the concrete powder not turning
-     * into concrete.
-     *
-     * @param centeredAround the block to search around.
-     */
-    static void findConcretePowder(Block centeredAround) {
-        ADJACENT_BLOCK_FACES.stream()
-                            .map(centeredAround::getRelative)
-                            .filter(IS_CONCRETE_POWDER)
-                            .forEach(Util::forceBlockUpdate);
-    }
-
-    // ------------------------------------------------------------------------
-    /**
-     * Limits the height of kelp plants. This method patches what is essentially
-     * a vanilla exploit that allows players to make kelp towers taller than the
-     * intended maximum of 26.
+     * Checks if a kelp plant has reached its maximum height. This method patches
+     * what is essentially a vanilla exploit that allows players to make kelp
+     * towers taller than the intended maximum of 26.
      *
      * @param kelp the newly-placed kelp.
-     * @return true if the kelp tower will be limited; false otherwise.
+     * @return true if the kelp tower should be limited; false if not.
      */
     static boolean limitKelpHeight(Block kelp) {
-        Location placedKelpLoc = kelp.getLocation();
-        Location lowestPossibleKelp = placedKelpLoc.clone().subtract(0, 26, 0);
-        switch (lowestPossibleKelp.getBlock().getType()) {
-            case KELP:
-            case KELP_PLANT:
-                return true;
-
-            default: return false;
+        Block nextBlock = kelp;
+        Material nextBlockType = kelp.getRelative(BlockFace.DOWN).getType();
+        int n = 0; // the placed block is not included in the count
+        while (nextBlockType == Material.KELP || nextBlockType == Material.KELP_PLANT) {
+            nextBlock = nextBlock.getRelative(BlockFace.DOWN);
+            nextBlockType = nextBlock.getType();
+            n++;
         }
+        return n >= 26;
     }
 
-    // ------------------------------------------------------------------------
     /**
      * A set of BlockFaces directly adjacent to an abstract block.
      */
@@ -162,7 +143,6 @@ class Util {
         BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST, BlockFace.UP, BlockFace.DOWN
     ));
 
-    // ------------------------------------------------------------------------
     /**
      * A predicate to test if a block is an air block. As of this writing, the
      * Material.VOID_AIR material is only used for air blocks in the interval
@@ -171,36 +151,6 @@ class Util {
      */
     private static final Predicate<Block> IS_AIR = (block) -> block.getType() == Material.AIR || block.getType() == Material.CAVE_AIR;
 
-    // ------------------------------------------------------------------------
-    /**
-     * A set of all concrete powder Materials.
-     */
-    private static final HashSet<Material> CONCRETE_POWDERS = new HashSet<>(Arrays.asList(
-        Material.BLACK_CONCRETE_POWDER,
-        Material.BLUE_CONCRETE_POWDER,
-        Material.BROWN_CONCRETE_POWDER,
-        Material.CYAN_CONCRETE_POWDER,
-        Material.GRAY_CONCRETE_POWDER,
-        Material.GREEN_CONCRETE_POWDER,
-        Material.LIGHT_BLUE_CONCRETE_POWDER,
-        Material.LIGHT_GRAY_CONCRETE_POWDER,
-        Material.LIME_CONCRETE_POWDER,
-        Material.MAGENTA_CONCRETE_POWDER,
-        Material.ORANGE_CONCRETE_POWDER,
-        Material.PINK_CONCRETE_POWDER,
-        Material.PURPLE_CONCRETE_POWDER,
-        Material.RED_CONCRETE_POWDER,
-        Material.YELLOW_CONCRETE_POWDER,
-        Material.WHITE_CONCRETE_POWDER
-    ));
-
-    // ------------------------------------------------------------------------
-    /**
-     * A predicate which tests if a block is concrete powder.
-     */
-    private static final Predicate<Block> IS_CONCRETE_POWDER = (block) -> CONCRETE_POWDERS.contains(block.getType());
-
-    // ------------------------------------------------------------------------
     /**
      * A set of relative vectors corresponding to the eight corners of a block.
      */
