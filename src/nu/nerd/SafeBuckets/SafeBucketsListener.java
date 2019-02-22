@@ -277,8 +277,10 @@ public class SafeBucketsListener implements Listener {
         // not a staff member trying to flow, and buckets are set to be safe
         if (!EnchantGlow.hasGlow(mainHand)) {
             if (clickedBlock.getBlockData() instanceof Waterlogged && mainHand.getType() == Material.WATER_BUCKET) {
-                if (!((Waterlogged) clickedBlock.getBlockData()).isWaterlogged()) {
+                if (!Util.isWaterlogged(clickedBlock)) {
                     SafeBuckets.setSafe(clickedBlock, true);
+                } else {
+                    SafeBuckets.setSafe(relativeBlock, true);
                 }
             } else if (relativeBlock.getType() == Material.SIGN || relativeBlock.getType() == Material.WALL_SIGN) {
                 //quick fix for bug where water placed on a sign flows
