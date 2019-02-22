@@ -35,8 +35,14 @@ public class Commands implements TabExecutor {
      * An ordered set of this plugin's subcommands.
      */
     private static final LinkedHashSet<String> SUBCOMMANDS = new LinkedHashSet<>(Arrays.asList(
-        "flowsel", "reload", "safe", "safesel", "unsafe"
+        "flowsel", "reload", "safe", "safesel", "unsafe", "version"
     ));
+
+    // ------------------------------------------------------------------------
+    /**
+     * An empty list used to return no command completions, e.g. for /flow.
+     */
+    private static final List<String> EMPTY_LIST = new ArrayList<>();
 
     // ------------------------------------------------------------------------
     /**
@@ -69,7 +75,7 @@ public class Commands implements TabExecutor {
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (command.getName().equalsIgnoreCase("flow")) {
             // no args
-            return new ArrayList<>();
+            return EMPTY_LIST;
         }
 
         // /sb
@@ -101,6 +107,12 @@ public class Commands implements TabExecutor {
      * @return true if processing is successful.
      */
     private boolean sbCommand(CommandSender sender, String[] args) {
+
+        // /sb version
+        if (args.length == 1 && args[0].equalsIgnoreCase("version")) {
+            sender.sendMessage(ChatColor.DARK_AQUA + "This is version " + ChatColor.YELLOW + SafeBuckets.getVersion());
+            return true;
+        }
 
         // /sb reload
         if (args.length == 1 && args[0].equalsIgnoreCase("reload")) {

@@ -70,6 +70,16 @@ public class SafeBuckets extends JavaPlugin {
 
     // ------------------------------------------------------------------------
     /**
+     * Returns the current version of SafeBuckets.
+     *
+     * @return the current version of SafeBuckets.
+     */
+    public static String getVersion() {
+        return PLUGIN.getClass().getPackage().getImplementationVersion();
+    }
+
+    // ------------------------------------------------------------------------
+    /**
      * Returns true if the given block is safe. This method consults an internal
      * cache for a result before calling the BlockStoreAPI if none is found.
      *

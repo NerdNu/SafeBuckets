@@ -84,6 +84,10 @@
                     <configuration>
                         <archive>
                             <addMavenDescriptor>false</addMavenDescriptor>
+                            <manifest>
+                                <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                                <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                            </manifest>
                         </archive>
                         <finalName>SafeBuckets-${project.version}</finalName>
                     </configuration>
