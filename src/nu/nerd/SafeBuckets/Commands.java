@@ -133,7 +133,7 @@ public class Commands implements TabExecutor {
                 return true;
             }
 
-            if (!SafeBuckets._worldEditEnabled || !SafeBuckets.CONFIG.WORLDEDIT_FLOWSEL_ENABLED) {
+            if (!SafeBuckets.CONFIG.WORLDEDIT_FLOWSEL_ENABLED) {
                 sender.sendMessage(ChatColor.RED + "That feature is not enabled.");
                 return true;
             }
@@ -154,7 +154,7 @@ public class Commands implements TabExecutor {
                 return true;
             }
 
-            if (!SafeBuckets._worldEditEnabled || !SafeBuckets.CONFIG.WORLDEDIT_FLOWSEL_ENABLED) {
+            if (!SafeBuckets.CONFIG.WORLDEDIT_FLOWSEL_ENABLED) {
                 sender.sendMessage(ChatColor.RED + "That feature is not enabled.");
                 return true;
             }
@@ -249,7 +249,7 @@ public class Commands implements TabExecutor {
             return true;
         }
 
-        if (!SafeBuckets._worldGuardEnabled || !SafeBuckets.CONFIG.PLAYER_SELF_FLOW) {
+        if (!SafeBuckets.CONFIG.PLAYER_SELF_FLOW) {
             sender.sendMessage(ChatColor.RED + "That feature is not enabled.");
             return true;
         }
@@ -283,7 +283,7 @@ public class Commands implements TabExecutor {
     private void bulkSafetyToggle(Player player, boolean state) {
         int blocksAffected = 0;
 
-        if (!SafeBuckets._worldEditEnabled) {
+        if (!SafeBuckets.CONFIG.WORLDEDIT_FLOWSEL_ENABLED) {
             player.sendMessage(ChatColor.RED + "WorldEdit must be installed to do that!");
             return;
         }

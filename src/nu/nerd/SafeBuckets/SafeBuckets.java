@@ -57,17 +57,17 @@ public class SafeBuckets extends JavaPlugin {
         // if WorldEdit is enabled in config, try to find the plugin
         if (CONFIG.WORLDEDIT_HOOK) {
             Plugin plugin = getServer().getPluginManager().getPlugin("WorldEdit");
-            _worldEditEnabled = plugin instanceof WorldEditPlugin;
-            if (!_worldEditEnabled) {
+            if (!(plugin instanceof WorldEditPlugin)) {
                 log("WorldEdit compatibility was enabled in config.yml but the WorldEdit plugin could not be found.");
+                CONFIG.WORLDEDIT_FLOWSEL_ENABLED = false;
             }
         }
 
         // try to find WorldGuard
         Plugin plugin = getServer().getPluginManager().getPlugin("WorldGuard");
-        _worldGuardEnabled = plugin instanceof WorldGuardPlugin;
-        if (!_worldGuardEnabled) {
+        if (!(plugin instanceof WorldGuardPlugin)) {
             log("The WorldGuard plugin could not be found. Player flow will be disabled.");
+            CONFIG.PLAYER_SELF_FLOW = false;
         }
 
         // create glow enchantment for compatibility with ModMode item serialization
@@ -208,7 +208,7 @@ public class SafeBuckets extends JavaPlugin {
      * @return true if the player can flow the given block.
      */
     static boolean isPlayerFlowPermitted(Player player, Block block) {
-        if (!_worldGuardEnabled) {
+        if (!CONFIG.PLAYER_SELF_FLOW) {
             return false;
         }
 
@@ -290,17 +290,5 @@ public class SafeBuckets extends JavaPlugin {
      * The block safety cache.
      */
     private static final HashSet<Location> CACHE = new HashSet<>();
-
-    // ------------------------------------------------------------------------
-    /**
-     * Whether or not WorldEdit is enabled.
-     */
-    static boolean _worldEditEnabled;
-
-    // ------------------------------------------------------------------------
-    /**
-     * Whether or not WorldGuard is enabled.
-     */
-    static boolean _worldGuardEnabled;
 
 }
