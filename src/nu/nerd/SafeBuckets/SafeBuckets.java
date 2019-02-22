@@ -37,19 +37,25 @@ public class SafeBuckets extends JavaPlugin {
 
     // ------------------------------------------------------------------------
     /**
+     * This plugin's configuration.
+     */
+    static Configuration CONFIG;
+
+    // ------------------------------------------------------------------------
+    /**
      * @see JavaPlugin#onEnable().
      */
     @Override
     public void onEnable() {
         PLUGIN = this;
-        Configuration.reload();
+        CONFIG = new Configuration();
 
         new Commands();
         new PlayerFlowCache();
         new SafeBucketsListener();
 
         // if WorldEdit is enabled in config, try to find the plugin
-        if (Configuration.WORLDEDIT_HOOK) {
+        if (CONFIG.WORLDEDIT_HOOK) {
             Plugin plugin = getServer().getPluginManager().getPlugin("WorldEdit");
             _worldEditEnabled = plugin instanceof WorldEditPlugin;
             if (!_worldEditEnabled) {
@@ -122,7 +128,7 @@ public class SafeBuckets extends JavaPlugin {
             }
 
             // check if there's an entry before spawning particles
-            if (Configuration.SHOW_PARTICLES && BlockStoreApi.getBlockMeta(block, PLUGIN, METADATA_KEY) != null) {
+            if (CONFIG.SHOW_PARTICLES && BlockStoreApi.getBlockMeta(block, PLUGIN, METADATA_KEY) != null) {
                 Bukkit.getScheduler().runTaskLaterAsynchronously(PLUGIN, () -> Util.showParticles(block, state), 1);
             }
 
@@ -161,7 +167,7 @@ public class SafeBuckets extends JavaPlugin {
      * @return true if the given ItemStack matches an unsafe bucket.
      */
     static boolean isUnsafeBucket(ItemStack item) {
-        return Configuration.BUCKETS.contains(item.getType()) && EnchantGlow.hasGlow(item);
+        return CONFIG.BUCKETS.contains(item.getType()) && EnchantGlow.hasGlow(item);
     }
 
     // ------------------------------------------------------------------------
@@ -214,7 +220,7 @@ public class SafeBuckets extends JavaPlugin {
             BlockVector3 wrappedVector = BlockVector3.at(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
             ApplicableRegionSet applicable = regions.getApplicableRegions(wrappedVector);
 
-            switch (Configuration.PLAYER_SELF_FLOW_MODE) {
+            switch (CONFIG.PLAYER_SELF_FLOW_MODE) {
                 case OWNER:
                     return applicable.isOwnerOfAll(wgPlayer) && applicable.size() > 0;
 
@@ -257,7 +263,7 @@ public class SafeBuckets extends JavaPlugin {
      * @param msg the debug message to be sent.
      */
     static void sendDebugMessage(String msg) {
-        if (!Configuration.DEBUG) {
+        if (!CONFIG.DEBUG) {
             return;
         }
         Bukkit.getServer().getOnlinePlayers().forEach(player -> {

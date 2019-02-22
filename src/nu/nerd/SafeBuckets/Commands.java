@@ -117,7 +117,7 @@ public class Commands implements TabExecutor {
         // /sb reload
         if (args.length == 1 && args[0].equalsIgnoreCase("reload")) {
             if (sender.hasPermission("safebuckets.reload")) {
-                Configuration.reload();
+                SafeBuckets.CONFIG.reload();
                 sender.sendMessage(ChatColor.DARK_AQUA + "Configuration reloaded.");
             } else {
                 sender.sendMessage(ChatColor.RED + "You don't have permission to do that!");
@@ -133,7 +133,7 @@ public class Commands implements TabExecutor {
                 return true;
             }
 
-            if (!SafeBuckets._worldEditEnabled || !Configuration.WORLDEDIT_FLOWSEL_ENABLED) {
+            if (!SafeBuckets._worldEditEnabled || !SafeBuckets.CONFIG.WORLDEDIT_FLOWSEL_ENABLED) {
                 sender.sendMessage(ChatColor.RED + "That feature is not enabled.");
                 return true;
             }
@@ -154,7 +154,7 @@ public class Commands implements TabExecutor {
                 return true;
             }
 
-            if (!SafeBuckets._worldEditEnabled || !Configuration.WORLDEDIT_FLOWSEL_ENABLED) {
+            if (!SafeBuckets._worldEditEnabled || !SafeBuckets.CONFIG.WORLDEDIT_FLOWSEL_ENABLED) {
                 sender.sendMessage(ChatColor.RED + "That feature is not enabled.");
                 return true;
             }
@@ -249,7 +249,7 @@ public class Commands implements TabExecutor {
             return true;
         }
 
-        if (!SafeBuckets._worldGuardEnabled || !Configuration.PLAYER_SELF_FLOW) {
+        if (!SafeBuckets._worldGuardEnabled || !SafeBuckets.CONFIG.PLAYER_SELF_FLOW) {
             sender.sendMessage(ChatColor.RED + "That feature is not enabled.");
             return true;
         }
@@ -304,8 +304,8 @@ public class Commands implements TabExecutor {
 
         if (!state && !player.hasPermission("safebuckets.override")) {
             int regionArea = region.getArea();
-            if (Configuration.WORLDEDIT_FLOWSEL_MAX_BLOCKS != 0 && regionArea > Configuration.WORLDEDIT_FLOWSEL_MAX_BLOCKS) {
-                player.sendMessage(ChatColor.RED + "Your selection must be under " + Configuration.WORLDEDIT_FLOWSEL_MAX_BLOCKS + " blocks!");
+            if (SafeBuckets.CONFIG.WORLDEDIT_FLOWSEL_MAX_BLOCKS != 0 && regionArea > SafeBuckets.CONFIG.WORLDEDIT_FLOWSEL_MAX_BLOCKS) {
+                player.sendMessage(ChatColor.RED + "Your selection must be under " + SafeBuckets.CONFIG.WORLDEDIT_FLOWSEL_MAX_BLOCKS + " blocks!");
                 return;
             }
         }

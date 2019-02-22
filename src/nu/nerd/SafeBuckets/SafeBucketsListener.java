@@ -67,17 +67,17 @@ public class SafeBucketsListener implements Listener {
         Dispenser dispenser = (Dispenser) event.getBlock().getState().getData();
         Block dispensed = event.getBlock().getRelative(dispenser.getFacing());
 
-        if (Configuration.BUCKETS.contains(material)) { // filled bucket being dumped
-            if (Configuration.DISPENSERS_ENABLED) {
-                if (Configuration.DISPENSERS_SAFE && SafeBuckets.isSafe(event.getBlock())) {
+        if (SafeBuckets.CONFIG.BUCKETS.contains(material)) { // filled bucket being dumped
+            if (SafeBuckets.CONFIG.DISPENSERS_ENABLED) {
+                if (SafeBuckets.CONFIG.DISPENSERS_SAFE && SafeBuckets.isSafe(event.getBlock())) {
                     SafeBuckets.setSafe(dispensed, true);
                 }
             } else {
                 event.setCancelled(true);
             }
         } else if (material == Material.BUCKET) { // empty bucket picking up liquid block
-            if (Configuration.LIQUID_BLOCKS.contains(dispensed.getType())) {
-                if (Configuration.DISPENSERS_ENABLED) {
+            if (SafeBuckets.CONFIG.LIQUID_BLOCKS.contains(dispensed.getType())) {
+                if (SafeBuckets.CONFIG.DISPENSERS_ENABLED) {
                     SafeBuckets.removeSafe(dispensed);
                 }
             } else {
@@ -107,7 +107,7 @@ public class SafeBucketsListener implements Listener {
             @Override
             public boolean setBlock(BlockVector3 loc, BlockStateHolder block) throws WorldEditException {
                 Material newMaterial = BukkitAdapter.adapt(block.getBlockType());
-                if (Configuration.LIQUID_BLOCKS.contains(newMaterial) && event.getWorld() != null) {
+                if (SafeBuckets.CONFIG.LIQUID_BLOCKS.contains(newMaterial) && event.getWorld() != null) {
                     World world = BukkitAdapter.adapt(event.getWorld());
                     Bukkit.getScheduler().runTaskLater(SafeBuckets.PLUGIN, () -> {
                         Block newBlock = world.getBlockAt(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
@@ -126,7 +126,7 @@ public class SafeBucketsListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockFade(BlockFadeEvent event) {
         if (event.getNewState().getType() == Material.WATER) {
-            if (Configuration.PREVENT_ICE_MELT && event.getBlock().getType() != Material.FROSTED_ICE) {
+            if (SafeBuckets.CONFIG.PREVENT_ICE_MELT && event.getBlock().getType() != Material.FROSTED_ICE) {
                 event.setCancelled(true);
             } else {
                 SafeBuckets.setSafe(event.getBlock(), true);
@@ -172,7 +172,7 @@ public class SafeBucketsListener implements Listener {
         }
 
         // meltable ice broken
-        if (Configuration.MELTABLE_ICE.contains(blockType)) {
+        if (SafeBuckets.CONFIG.MELTABLE_ICE.contains(blockType)) {
             if (event.getPlayer() != null) {
                 if (!event.getPlayer().getEquipment().getItemInMainHand().containsEnchantment(Enchantment.SILK_TOUCH)) {
                     // ice broken without silk touch turns into water and needs
@@ -232,9 +232,9 @@ public class SafeBucketsListener implements Listener {
                 break;
 
             case DISPENSER:
-                if (!Configuration.DISPENSERS_ENABLED) {
+                if (!SafeBuckets.CONFIG.DISPENSERS_ENABLED) {
                     event.setCancelled(true);
-                } else if (Configuration.DISPENSERS_SAFE) {
+                } else if (SafeBuckets.CONFIG.DISPENSERS_SAFE) {
                     SafeBuckets.setSafe(event.getBlockPlaced(), true);
                 }
                 break;
@@ -261,10 +261,10 @@ public class SafeBucketsListener implements Listener {
      */
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerBucketEmpty(PlayerBucketEmptyEvent event) {
-        if (!Configuration.BUCKETS_ENABLED) {
+        if (!SafeBuckets.CONFIG.BUCKETS_ENABLED) {
             event.setCancelled(true);
             return;
-        } else if (!Configuration.BUCKETS_SAFE) {
+        } else if (!SafeBuckets.CONFIG.BUCKETS_SAFE) {
             return;
         }
 
@@ -361,9 +361,9 @@ public class SafeBucketsListener implements Listener {
         Player player = event.getPlayer();
         if (event.getAction() == Action.LEFT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             if (event.hasItem()) {
-                if (event.getItem().getType() == Configuration.TOOL_ITEM && player.hasPermission("safebuckets.tools.item")) {
+                if (event.getItem().getType() == SafeBuckets.CONFIG.TOOL_ITEM && player.hasPermission("safebuckets.tools.item")) {
                     useTool(event, event.getClickedBlock());
-                } else if (event.getItem().getType() == Configuration.INSPECTION_BLOCK && player.hasPermission("safebuckets.tools.block")) {
+                } else if (event.getItem().getType() == SafeBuckets.CONFIG.INSPECTION_BLOCK && player.hasPermission("safebuckets.tools.block")) {
                     useBlock(event, event.getClickedBlock().getRelative(event.getBlockFace()));
                 }
             }
@@ -431,7 +431,7 @@ public class SafeBucketsListener implements Listener {
                 SafeBuckets.messageAndLog(player, ChatColor.DARK_AQUA + "Flowed " + clickedBlock.getType().toString() + " at " + Util.formatCoords(clickedBlock.getLocation()));
                 Util.playFlowSound(player);
             } else {
-                player.sendMessage(ChatColor.RED + "You can only flow liquids in regions you " + (Configuration.PLAYER_SELF_FLOW_MODE == PlayerFlowMode.OWNER ? "own" : "are a member of") + "!");
+                player.sendMessage(ChatColor.RED + "You can only flow liquids in regions you " + (SafeBuckets.CONFIG.PLAYER_SELF_FLOW_MODE == PlayerFlowMode.OWNER ? "own" : "are a member of") + "!");
             }
             event.setCancelled(true);
             return;
@@ -445,7 +445,7 @@ public class SafeBucketsListener implements Listener {
                     SafeBuckets.messageAndLog(player, ChatColor.DARK_AQUA + "Flowed " + relativeBlock.getType().toString() + " at " + Util.formatCoords(relativeBlock.getLocation()));
                     Util.playFlowSound(player);
                 } else {
-                    player.sendMessage(ChatColor.RED + "You can only flow liquids in regions you " + (Configuration.PLAYER_SELF_FLOW_MODE == PlayerFlowMode.OWNER ? "own" : "are a member of") + "!");
+                    player.sendMessage(ChatColor.RED + "You can only flow liquids in regions you " + (SafeBuckets.CONFIG.PLAYER_SELF_FLOW_MODE == PlayerFlowMode.OWNER ? "own" : "are a member of") + "!");
                 }
             }
         }

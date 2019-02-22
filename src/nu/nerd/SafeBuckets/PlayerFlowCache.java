@@ -34,7 +34,7 @@ class PlayerFlowCache implements Listener {
         Bukkit.getScheduler().runTaskTimer(SafeBuckets.PLUGIN,
                                            PlayerFlowCache::reviewCache,
                                            1, // delay
-                                           Configuration.PLAYER_SELF_FLOW_CACHE_REVIEW_PERIOD);
+                                           SafeBuckets.CONFIG.PLAYER_SELF_FLOW_CACHE_REVIEW_PERIOD);
     }
 
     // ------------------------------------------------------------------------
@@ -91,7 +91,7 @@ class PlayerFlowCache implements Listener {
      * @return true if the given player's flow session should expire.
      */
     private static boolean willExpire(UUID uuid) {
-        long expirationTimestamp = _activePlayers.get(uuid) + Configuration.PLAYER_SELF_FLOW_DURATION;
+        long expirationTimestamp = _activePlayers.get(uuid) + SafeBuckets.CONFIG.PLAYER_SELF_FLOW_DURATION;
         if (expirationTimestamp - System.currentTimeMillis() < 0) {
             Player player = Bukkit.getServer().getPlayer(uuid);
             player.sendMessage(ChatColor.DARK_AQUA + "Flow mode is " + ChatColor.YELLOW + "off");
