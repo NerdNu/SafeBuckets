@@ -14,6 +14,10 @@ import java.util.stream.Collectors;
  */
 public class Configuration {
 
+    Configuration() {
+        reload();
+    }
+
     // ------------------------------------------------------------------------
     /**
      * Reloads the configuration.
@@ -46,7 +50,7 @@ public class Configuration {
         DISPENSERS_ENABLED = _config.getBoolean("dispensers.enabled", true);
         DISPENSERS_SAFE = _config.getBoolean("dispensers.default-to-safe", true);
 
-        BUCKETS_ENABLED = _config.getBoolean("tools.buckets-enabled", true);
+        BUCKETS_ENABLED = _config.getBoolean("buckets.enabled", true);
         BUCKETS_SAFE = _config.getBoolean("buckets.default-to-safe", true);
 
         WORLDEDIT_HOOK = _config.getBoolean("worldedit.hook", true);
