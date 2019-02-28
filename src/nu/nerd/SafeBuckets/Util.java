@@ -11,6 +11,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.data.Waterlogged;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.util.Vector;
 
 import java.util.Arrays;
@@ -105,14 +106,30 @@ class Util {
      * @param block the block.
      */
     static void forceBlockUpdate(Block block) {
-        Block adjacentBlock = ADJACENT_BLOCK_FACES.stream()
-                                                  .map(block::getRelative)
-                                                  .filter(IS_AIR)
-                                                  .findAny()
-                                                  .orElse(block.getRelative(BlockFace.NORTH));
-        BlockState currentState = adjacentBlock.getState();
-        adjacentBlock.setType(Material.VOID_AIR);
-        Bukkit.getScheduler().runTaskLater(SafeBuckets.PLUGIN, () -> currentState.update(true, true), 1);
+        Block updateBlock = null;
+        for (BlockFace blockFace : ADJACENT_BLOCK_FACES) {
+            Block adjBlock = block.getRelative(blockFace);
+            Material adjType = adjBlock.getType();
+            if (adjBlock.getState() instanceof InventoryHolder) {
+                continue;
+            }
+            if (IS_AIR.test(adjBlock) || adjType.isOccluding() || adjBlock.isLiquid()) {
+                updateBlock = adjBlock;
+                break;
+            }
+        }
+        if (updateBlock == null) {
+            // fail gracefully
+            SafeBuckets.log("Failed to force a block update at " + Util.formatCoords(block.getLocation()) + ": no suitable adjacent blocks.");
+            return;
+        }
+        BlockState currentState = updateBlock.getState();
+        updateBlock.setType(Material.VOID_AIR);
+        final Block updatedBlock = updateBlock;
+        Bukkit.getScheduler().runTaskLater(SafeBuckets.PLUGIN, () -> {
+            updatedBlock.setBlockData(currentState.getBlockData());
+            currentState.update(true, true);
+        }, 1);
     }
 
     // ------------------------------------------------------------------------
