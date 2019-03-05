@@ -10,6 +10,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.data.Waterlogged;
+import org.bukkit.block.data.type.Slab;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.util.Vector;
@@ -47,6 +48,25 @@ class Util {
      */
     static boolean isWaterlogged(Block block) {
         return block.getBlockData() instanceof Waterlogged && ((Waterlogged) block.getBlockData()).isWaterlogged();
+    }
+
+    // ------------------------------------------------------------------------
+    /**
+     * Return true if the given block is able to be waterlogged. Some blocks,
+     * such as a double slab, are not actually able to be waterlogged (i.e.
+     * clicking with a filled bucket places the water against a double-slab)
+     * but still implement Waterlogged.
+     *
+     * @param block the block.
+     * @return true if the block is able to be waterlogged.
+     */
+    static boolean isWaterloggable(Block block) {
+        if (block.getBlockData() instanceof Slab) {
+            if (((Slab) block.getBlockData()).getType() == Slab.Type.DOUBLE) {
+                return false;
+            }
+        }
+        return block.getBlockData() instanceof Waterlogged;
     }
 
     // ------------------------------------------------------------------------
