@@ -276,7 +276,7 @@ public class SafeBucketsListener implements Listener {
 
         // not a staff member trying to flow, and buckets are set to be safe
         if (!EnchantGlow.hasGlow(mainHand)) {
-            if (Util.isWaterloggable(clickedBlock) && mainHand.getType() == Material.WATER_BUCKET) {
+            if (Util.isWaterloggable(clickedBlock) && Util.isWaterBucket(mainHand)) {
                 if (!Util.isWaterlogged(clickedBlock)) {
                     SafeBuckets.setSafe(clickedBlock, true);
                 } else {

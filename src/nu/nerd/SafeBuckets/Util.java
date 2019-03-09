@@ -13,6 +13,7 @@ import org.bukkit.block.data.Waterlogged;
 import org.bukkit.block.data.type.Slab;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
 import java.util.Arrays;
@@ -71,6 +72,25 @@ class Util {
 
     // ------------------------------------------------------------------------
     /**
+     * Returns true if the given ItemStack is capable of placing water in the
+     * world.
+     *
+     * @param itemStack the item.
+     * @return true if the item is capable of placing water in the world.
+     */
+    static boolean isWaterBucket(ItemStack itemStack) {
+        if (itemStack == null) {
+            return false;
+        }
+        Material bucketType = itemStack.getType();
+        if (bucketType == Material.LAVA_BUCKET || bucketType == Material.MILK_BUCKET) {
+            return false;
+        }
+        return SafeBuckets.CONFIG.BUCKETS.contains(bucketType) || bucketType.toString().contains("_BUCKET");
+    }
+
+    // ------------------------------------------------------------------------
+    /**
      * Plays a sound at the player's location. Used as an auditory confirmation
      * of a successful flow.
      *
@@ -91,8 +111,7 @@ class Util {
     static void showParticles(Block block, boolean state) {
         Location blockCenter = block.getLocation().add(0.5, 0.5, 0.5);
         boolean isLiquid = block.getType() == Material.WATER; // lava is liquid but not transparent
-        Particle.DustOptions color = (state) ? new Particle.DustOptions(Color.LIME, 1)
-                                         : new Particle.DustOptions(Color.RED, 1);
+        Particle.DustOptions color = new Particle.DustOptions(state ? Color.LIME : Color.RED, 1);
         if (isLiquid) {
             // center only
             block.getWorld().spawnParticle(Particle.REDSTONE, blockCenter, 10, color);
@@ -112,9 +131,10 @@ class Util {
      * @return a human-readable ordered triple as a string.
      */
     static String formatCoords(Location location) {
-        return String.format("(x:%d, y:%d, z:%d)", location.getBlockX(),
-                                                 location.getBlockY(),
-                                                 location.getBlockZ());
+        return String.format("(x:%d, y:%d, z:%d)",
+            location.getBlockX(),
+            location.getBlockY(),
+            location.getBlockZ());
     }
 
     // ------------------------------------------------------------------------
@@ -140,7 +160,7 @@ class Util {
         }
         if (updateBlock == null) {
             // fail gracefully
-            SafeBuckets.log("Failed to force a block update at " + Util.formatCoords(block.getLocation()) + ": no suitable adjacent blocks.");
+            SafeBuckets.log("Failed to force a block update at " + Util.formatCoords(block.getLocation())+ ": no suitable adjacent blocks.");
             return;
         }
         BlockState currentState = updateBlock.getState();
