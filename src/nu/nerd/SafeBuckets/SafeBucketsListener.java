@@ -65,20 +65,20 @@ public class SafeBucketsListener implements Listener {
     public void onBlockDispense(BlockDispenseEvent event) {
         Material material = event.getItem().getType();
         Dispenser dispenser = (Dispenser) event.getBlock().getState().getData();
-        Block dispensed = event.getBlock().getRelative(dispenser.getFacing());
+        Block adjacentBlock = event.getBlock().getRelative(dispenser.getFacing());
 
         if (SafeBuckets.CONFIG.BUCKETS.contains(material)) { // filled bucket being dumped
             if (SafeBuckets.CONFIG.DISPENSERS_ENABLED) {
                 if (SafeBuckets.CONFIG.DISPENSERS_SAFE && SafeBuckets.isSafe(event.getBlock())) {
-                    SafeBuckets.setSafe(dispensed, true);
+                    SafeBuckets.setSafe(adjacentBlock, true);
                 }
             } else {
                 event.setCancelled(true);
             }
-        } else if (material == Material.BUCKET) { // empty bucket picking up liquid block
-            if (SafeBuckets.CONFIG.LIQUID_BLOCKS.contains(dispensed.getType())) {
+        } else if (material == Material.BUCKET) { // empty bucket picking up liquid block or a waterloggable
+            if (Util.isWaterlogged(adjacentBlock) || SafeBuckets.CONFIG.LIQUID_BLOCKS.contains(adjacentBlock.getType())) {
                 if (SafeBuckets.CONFIG.DISPENSERS_ENABLED) {
-                    SafeBuckets.removeSafe(dispensed);
+                    SafeBuckets.removeSafe(adjacentBlock);
                 }
             } else {
                 event.setCancelled(true);
