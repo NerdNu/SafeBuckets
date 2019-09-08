@@ -127,9 +127,7 @@ public class SafeBuckets extends JavaPlugin {
             BlockStoreApi.setBlockMeta(block, PLUGIN, METADATA_KEY, true);
         } else {
             CACHE.remove(block.getLocation());
-            BlockStoreApi.getAllBlockMeta(block, PLUGIN).forEach((key, o) -> {
-                BlockStoreApi.removeBlockMeta(block, PLUGIN, key);
-            });
+            BlockStoreApi.removeBlockMeta(block, PLUGIN, METADATA_KEY);
         }
 
         // force block updates (note: can be simplified once Spigot adds new block update method
