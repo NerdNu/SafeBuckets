@@ -15,6 +15,9 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.Levelled;
+import org.bukkit.block.data.type.BubbleColumn;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -115,29 +118,48 @@ public class SafeBuckets extends JavaPlugin {
      * in the internal cache and BlockStore.
      *
      * @param block the block.
-     * @param state the safety status (true = safe).
+     * @param safe the safety status (true = safe).
      */
-    static void setSafe(Block block, boolean state) {
-        Bukkit.getScheduler().runTaskLater(PLUGIN, () -> {
-            if (state) {
-                sendDebugMessage("Safety change: " + Util.formatCoords(block.getLocation()) + " has been made §aSAFE");
-                CACHE.add(block.getLocation());
-            } else {
-                sendDebugMessage("Safety change: " + Util.formatCoords(block.getLocation()) + " has been made §cUNSAFE");
-                CACHE.remove(block.getLocation());
-            }
+    static void setSafe(Block block, boolean safe) {
+        // update blockstore
+        if (safe) {
+            CACHE.add(block.getLocation());
+            BlockStoreApi.setBlockMeta(block, PLUGIN, METADATA_KEY, true);
+        } else {
+            CACHE.remove(block.getLocation());
+            BlockStoreApi.removeBlockMeta(block, PLUGIN, METADATA_KEY);
+        }
 
-            // check if there's an entry before spawning particles
-            if (CONFIG.SHOW_PARTICLES && BlockStoreApi.getBlockMeta(block, PLUGIN, METADATA_KEY) != null) {
-                Bukkit.getScheduler().runTaskLaterAsynchronously(PLUGIN, () -> Util.showParticles(block, state), 1);
+        // force block updates (note: can be simplified once Spigot adds new block update method
+        // see: https://hub.spigotmc.org/jira/browse/SPIGOT-4759
+        if (!safe) {
+            if (block.getType() == Material.BUBBLE_COLUMN) {
+                final boolean isDrag = ((BubbleColumn) block.getBlockData()).isDrag();
+                block.setType(Material.WATER, true);
+                Bukkit.getScheduler().runTask(PLUGIN, () -> {
+                    block.setType(Material.BUBBLE_COLUMN, true);
+                    ((BubbleColumn) block.getBlockData()).setDrag(isDrag);
+                });
+            } else if (block.getType() == Material.WATER || block.getType() == Material.LAVA) {
+                Levelled levelled = (Levelled) block.getBlockData();
+                levelled.setLevel(1);
+                block.setBlockData(levelled);
+                Bukkit.getScheduler().runTask(PLUGIN, () -> {
+                    levelled.setLevel(0);
+                    block.setBlockData(levelled);
+                });
+            } else if (Util.isWaterlogged(block)) {
+                for (BlockFace blockFace : Util.ADJACENT_BLOCK_FACES) {
+                    Block adjacentBlock = block.getRelative(blockFace);
+                    Material type = adjacentBlock.getType();
+                    if (type == Material.AIR || type == Material.CAVE_AIR) {
+                        adjacentBlock.setType(Material.VOID_AIR, true);
+                        Bukkit.getScheduler().runTask(PLUGIN, () -> adjacentBlock.setType(type));
+                        break;
+                    }
+                }
             }
-
-            BlockStoreApi.setBlockMeta(block, PLUGIN, METADATA_KEY, state);
-
-            if (!state) {
-                Util.forceBlockUpdate(block);
-            }
-        }, 1);
+        }
     }
 
     // ------------------------------------------------------------------------

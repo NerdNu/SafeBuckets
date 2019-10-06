@@ -317,7 +317,7 @@ public class Commands implements TabExecutor {
             for (int y = min.getBlockY(); y <= max.getBlockY(); y++) {
                 for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
                     Block block = world.getBlockAt(x, y, z);
-                    if (block.getType() == Material.WATER || block.getType() == Material.LAVA || Util.isWaterlogged(block)) {
+                    if (block.getType() == Material.BUBBLE_COLUMN || block.getType() == Material.WATER || block.getType() == Material.LAVA || Util.isWaterlogged(block)) {
                         if (state && block.getBlockData() instanceof Levelled) {
                             Levelled levelled = (Levelled) block.getBlockData();
                             if (levelled.getLevel() > 0) {
