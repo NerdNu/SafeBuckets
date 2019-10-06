@@ -8,7 +8,7 @@ authors: [Travis Watkins, Ed Kellett, Stephen McGregor, totemo, redwall_hp, berm
 depend: [BlockStore]
 softdepend: [WorldEdit, WorldGuard]
 loadbefore: [Multiverse-Core]
-api-version: 1.13
+api-version: 1.14
 
 permissions:
   safebuckets.debug:

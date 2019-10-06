@@ -13,6 +13,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Tag;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -282,7 +283,7 @@ public class SafeBucketsListener implements Listener {
                 } else {
                     SafeBuckets.setSafe(relativeBlock, true);
                 }
-            } else if (relativeBlock.getType() == Material.SIGN || relativeBlock.getType() == Material.WALL_SIGN) {
+            } else if (Tag.SIGNS.isTagged(relativeBlock.getType())) {
                 //quick fix for bug where water placed on a sign flows
                 SafeBuckets.setSafe(relativeBlock, true);
             } else if (Util.AIR_BLOCKS.contains(relativeBlock.getType())) {
