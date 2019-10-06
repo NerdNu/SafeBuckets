@@ -130,6 +130,10 @@ public class SafeBuckets extends JavaPlugin {
             BlockStoreApi.removeBlockMeta(block, PLUGIN, METADATA_KEY);
         }
 
+        if (CONFIG.SHOW_PARTICLES) {
+            Bukkit.getScheduler().runTaskLater(PLUGIN, () -> Util.showParticles(block, isSafe(block)), 1);
+        }
+
         // force block updates (note: can be simplified once Spigot adds new block update method
         // see: https://hub.spigotmc.org/jira/browse/SPIGOT-4759
         if (!safe) {
