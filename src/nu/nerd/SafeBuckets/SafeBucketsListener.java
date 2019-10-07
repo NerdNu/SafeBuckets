@@ -440,7 +440,9 @@ public class SafeBucketsListener implements Listener {
             return;
         }
 
-        if (relativeBlock.getType() == Material.WATER || relativeBlock.getType() == Material.LAVA) {
+        if (relativeBlock.getType() == Material.WATER ||
+            relativeBlock.getType() == Material.LAVA ||
+            relativeBlock.getType() == Material.BUBBLE_COLUMN) {
             if (SafeBuckets.isSafe(relativeBlock)) {
                 event.setCancelled(true);
                 if (SafeBuckets.isPlayerFlowPermitted(player, relativeBlock)) {
