@@ -321,7 +321,9 @@ public class SafeBucketsListener implements Listener {
         }
 
         // relative block is water or lava
-        if (relativeBlock.getType() == Material.WATER || relativeBlock.getType() == Material.LAVA) {
+        if (relativeBlock.getType() == Material.WATER ||
+            relativeBlock.getType() == Material.LAVA ||
+            relativeBlock.getType() == Material.BUBBLE_COLUMN) {
             if (SafeBuckets.isSafe(relativeBlock)) {
                 // if it's safe: flow, replenish, exit
                 SafeBuckets.setSafe(relativeBlock, false);
