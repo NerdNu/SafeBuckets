@@ -82,3 +82,33 @@ Permissions
  * `safebuckets.flowsel` - Permission to use `/sb flowsel`.
  * `safebuckets.reload` - Permission to use `/sb reload`.
  * `safebuckets.debug` - Players with this permission receive debug messages.
+ 
+ 
+Build Instructions
+------------------
+SafeBuckets depends on [NerdNu/BlockStore](https://github.com/NerdNu/BlockStore).
+You will need a version of BlockStore matching the dependency specification for
+it in [SafeBuckets/pom.xml](https://github.com/NerdNu/SafeBuckets/blob/master/pom.xml).
+ 
+If you have downloaded that dependency from the [NerdNu/BlockStore/releases](https://github.com/NerdNu/BlockStore/releases) page
+you can install it into the local Maven repository with:
+```
+mvn install:install-file -DgroupId=net.sothatsit -DartifactId=blockstore -Dversion=1.6.1 \
+    -Dpackaging=jar -Dfile=Blockstore-1.6.1.jar
+```
+
+Alternatively, you can build BlockStore yourself and install it into the local repository:
+```
+git clone https://github.com/NerdNu/BlockStore
+cd BlockStore
+git checkout v1.6.1   # whatever version SafeBuckets/pom.xml wants
+mvn install
+```
+
+Once you have a valid BlockStore dependency, you can build SafeBuckets:
+```
+git clone https://github.com/NerdNu/SafeBuckets
+cd SafeBuckets
+mvn
+```
+
